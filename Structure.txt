@@ -1,0 +1,210 @@
+🏗️ Overall Microservices Structure
+
+medicnote/
+│
+├── doctor-service/
+├── patient-service/
+├── prescription-service/
+│
+├── api-gateway/        (optional but recommended)
+├── service-registry/   (Eureka - optional)
+--------------------------------------------------------------------
+🧩 1. DOCTOR SERVICE
+📁 Folder Structure
+
+doctor-service/
+│
+├── controller/
+│   └── DoctorController.java
+│
+├── service/
+│   ├── DoctorService.java
+│   └── DoctorServiceImpl.java
+│
+├── repository/
+│   └── DoctorRepository.java
+│
+├── entity/
+│   └── Doctor.java
+│
+├── dto/
+│   ├── DoctorRequestDTO.java
+│   └── DoctorResponseDTO.java
+│
+├── config/
+│   └── SecurityConfig.java
+│
+├── exception/
+│   └── GlobalExceptionHandler.java
+│
+└── DoctorServiceApplication.java
+--------------------------------------------------------------------
+🔌 APIs (Doctor Service)
+
+✅ Register Doctor
+POST /doctors/register
+
+Request:
+
+{
+  "doctorName": "John",
+  "doctorEmail": "john@gmail.com",
+  "doctorPassword": "1234",
+  "doctorPhone": "9876543210",
+  "doctorSpecialization": "Cardiologist"
+}
+
+✅ Login Doctor
+POST /doctors/login
+
+✅ Get Doctor by ID
+GET /doctors/{id}
+
+✅ Get All Doctors
+GET /doctors
+
+✅ Update Doctor
+PUT /doctors/{id}
+
+✅ Delete Doctor
+DELETE /doctors/{id}
+--------------------------------------------------------------------
+🧩 2. PATIENT SERVICE
+📁 Folder Structure
+
+patient-service/
+│
+├── controller/
+│   └── PatientController.java
+│
+├── service/
+│   ├── PatientService.java
+│   └── PatientServiceImpl.java
+│
+├── repository/
+│   └── PatientRepository.java
+│
+├── entity/
+│   └── Patient.java
+│
+├── dto/
+│   ├── PatientRequestDTO.java
+│   └── PatientResponseDTO.java
+│
+├── exception/
+│   └── GlobalExceptionHandler.java
+│
+└── PatientServiceApplication.java
+--------------------------------------------------------------------
+🔌 APIs (Patient Service)
+✅ Register Patient
+POST /patients/register
+
+✅ Get Patient by ID
+GET /patients/{id}
+
+✅ Get All Patients
+GET /patients
+
+✅ Update Patient
+PUT /patients/{id}
+
+✅ Delete Patient
+DELETE /patients/{id}
+--------------------------------------------------------------------
+🧩 3. PRESCRIPTION SERVICE ⭐ (CORE)
+📁 Folder Structure
+
+prescription-service/
+│
+├── controller/
+│   └── PrescriptionController.java
+│
+├── service/
+│   ├── PrescriptionService.java
+│   └── PrescriptionServiceImpl.java
+│
+├── repository/
+│   └── PrescriptionRepository.java
+│
+├── entity/
+│   └── Prescription.java
+│
+├── dto/
+│   ├── PrescriptionRequestDTO.java
+│   └── PrescriptionResponseDTO.java
+│
+├── client/   <-- 🔥 IMPORTANT
+│   ├── DoctorClient.java
+│   └── PatientClient.java
+│
+├── util/
+│   └── PdfGenerator.java
+│
+├── exception/
+│   └── GlobalExceptionHandler.java
+│
+└── PrescriptionServiceApplication.java
+--------------------------------------------------------------------
+🔌 APIs (Prescription Service)
+
+✅ Create Prescription
+POST /prescriptions
+
+Request:
+
+{
+  "doctorId": 1,
+  "patientId": 2,
+  "diagnosis": "Fever",
+  "medicines": "Paracetamol",
+  "notes": "Take rest"
+}
+
+✅ Get Prescription by ID
+GET /prescriptions/{id}
+
+✅ Get All Prescriptions by Patient
+GET /prescriptions/patient/{patientId}
+
+✅ Get All Prescriptions by Doctor
+GET /prescriptions/doctor/{doctorId}
+
+✅ Download Prescription (PDF) ⭐
+GET /prescriptions/{id}/download
+
+👉 Returns PDF file
+
+✅ Delete Prescription
+DELETE /prescriptions/{id}
+--------------------------------------------------------------------
+🔗 Inter-Service Communication
+
+Inside prescription-service/client/
+
+DoctorClient
+
+@FeignClient(name = "doctor-service")
+public interface DoctorClient {
+
+    @GetMapping("/doctors/{id}")
+    DoctorResponseDTO getDoctorById(@PathVariable Long id);
+}
+
+PatientClient
+
+@FeignClient(name = "patient-service")
+public interface PatientClient {
+
+    @GetMapping("/patients/{id}")
+    PatientResponseDTO getPatientById(@PathVariable Long id);
+}
+--------------------------------------------------------------------
+🔥 BONUS (Highly Recommended)
+🌐 API Gateway
+
+Routes requests:
+
+/api/doctors → doctor-service
+/api/patients → patient-service
+/api/prescriptions → prescription-service
