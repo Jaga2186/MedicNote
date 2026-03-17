@@ -1,17 +1,16 @@
 package com.MedicNote.doctorService.mapper;
 
+import com.MedicNote.doctorService.dto.DoctorRequestDTO;
+import com.MedicNote.doctorService.dto.DoctorResponseDTO;
+import com.MedicNote.doctorService.entity.Doctor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import com.MedicNote.doctorService.dto.DoctorRequestDTO;
-import com.MedicNote.doctorService.dto.DoctorResponseDTO;
-import com.MedicNote.doctorService.entity.Doctor;
-
 @Mapper(componentModel = "spring")
-public interface DoctorRequestDTOtoDoctor {
+public interface DTOMapper {
 
-    DoctorRequestDTOtoDoctor INSTANCE = Mappers.getMapper(DoctorRequestDTOtoDoctor.class);
+    DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
 
     /**
      * Maps DoctorRequestDTO to Doctor entity

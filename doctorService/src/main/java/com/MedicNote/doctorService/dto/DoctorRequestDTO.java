@@ -21,7 +21,7 @@ public class DoctorRequestDTO {
     @NotBlank(message = "Password is required")
     private String doctorPassword;
 
-    @Patter(regexp = "^[6-9]\\d{9}$", message = "Phone number should be valid")
+    @Pattern(regexp = "^[6-9]\\d{9}$", message = "Phone number should be valid")
     private String doctorPhone;
 
     @NotBlank(message = "Specialization is required")
