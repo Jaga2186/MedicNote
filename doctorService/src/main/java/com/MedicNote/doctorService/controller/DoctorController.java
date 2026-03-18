@@ -60,7 +60,7 @@ public class DoctorController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getALlDoctors() {
+    public ResponseEntity<Map<String, Object>> getAllDoctors() {
         log.info("Fetching all doctors");
 
         List<DoctorResponseDTO> doctors = doctorService.getAllDoctors();
