@@ -1,11 +1,12 @@
 package com.MedicNote.doctorService.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.Positive;
 
 import com.MedicNote.doctorService.dto.DoctorResponseDTO;
 import com.MedicNote.doctorService.dto.DoctorRequestDTO;
+import com.MedicNote.doctorService.service.DoctorService;
 
 import java.util.List;
 import java.util.HashMap;
@@ -22,10 +24,10 @@ import java.util.Map;
 @RequestMapping("/doctors")
 @Validated
 @Slf4j
+@RequiredArgsConstructor
 public class DoctorController {
 
-    @Autowired
-    private DoctorService doctorService;
+    private final DoctorService doctorService;
     
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerDoctor(@Valid @RequestBody DoctorRequestDTO doctorRequest) {
@@ -115,7 +117,7 @@ public class DoctorController {
             @Valid @RequestBody DoctorRequestDTO doctorRequestDTO) {
         log.info("Updating doctor with ID: {}", doctorId);
 
-        DoctorResponseDTO response = doctorService.updateDocterById(doctorId, doctorRequestDTO);
+        DoctorResponseDTO response = doctorService.updateDoctorById(doctorId, doctorRequestDTO);
 
         Map<String, Object> result = new HashMap<>();
 
