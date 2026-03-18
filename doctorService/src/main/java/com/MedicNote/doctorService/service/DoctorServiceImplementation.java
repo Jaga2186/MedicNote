@@ -33,7 +33,7 @@ public class DoctorServiceImplementation implements DoctorService {
     public DoctorResponseDTO registerDoctor(DoctorRequestDTO doctorRequestDTO) {
         log.info("Attempting to register Doctor with email: {}", doctorRequestDTO.getDoctorEmail());
 
-        if(doctorRepository.existsByEmail(doctorRequestDTO.getDoctorEmail())) {
+        if(doctorRepository.existsByDoctorEmail(doctorRequestDTO.getDoctorEmail())) {
             log.warn("Doctor with email {} already exists", doctorRequestDTO.getDoctorEmail());
             throw new DoctorAlreadyExistsException(
                     "Doctor with email " + doctorRequestDTO.getDoctorEmail() + "already exists"
@@ -54,7 +54,7 @@ public class DoctorServiceImplementation implements DoctorService {
     public DoctorResponseDTO loginDoctor(String email, String password) {
         log.info("Attempting to login with email: {}", email);
 
-        Optional<Doctor> doctor = doctorRepository.findByEmail(email);
+        Optional<Doctor> doctor = doctorRepository.findByDoctorEmail(email);
 
         if(doctor.isEmpty()) {
             log.warn("Login failed: Doctor with  email {} not found", email);
@@ -110,7 +110,7 @@ public class DoctorServiceImplementation implements DoctorService {
                 .orElseThrow(()-> new DoctorNotFoundException(doctorId));
 
         if(!doctor.getDoctorEmail().equals(doctorRequestDTO.getDoctorEmail()) &&
-            doctorRepository.existsByEmail(doctorRequestDTO.getDoctorEmail())) {
+            doctorRepository.existsByDoctorEmail(doctorRequestDTO.getDoctorEmail())) {
             log.info("Update failed: Email {} already exists", doctorRequestDTO.getDoctorEmail());
             throw new DoctorAlreadyExistsException("Doctor with email {}" + doctorRequestDTO.getDoctorEmail()
                     +" already exists");
@@ -120,7 +120,7 @@ public class DoctorServiceImplementation implements DoctorService {
         doctor.setDoctorEmail(doctorRequestDTO.getDoctorEmail());
         doctor.setDoctorPassword(doctorRequestDTO.getDoctorPassword());
         doctor.setDoctorPhone(doctorRequestDTO.getDoctorPhone());
-        doctor.setDoctorSpecialization(doctorRequestDTO.getDoctorSpecialization());
+        doctor.setSpecialization(doctorRequestDTO.getSpecialization());
         doctor.setLicenseNumber(doctorRequestDTO.getLicenseNumber());
         doctor.setExperienceYears(doctorRequestDTO.getExperienceYears());
         doctor.setHospitalName(doctorRequestDTO.getHospitalName());
@@ -146,8 +146,8 @@ public class DoctorServiceImplementation implements DoctorService {
     }
 
     @Override
-    public Boolean checkDoctorByEmail(String email) {
+    public Boolean checkByDoctorEmail(String email) {
         log.debug("Checking if email exists {}", email);
-        return doctorRepository.existsByEmail(email);
+        return doctorRepository.existsByDoctorEmail(email);
     }
 }

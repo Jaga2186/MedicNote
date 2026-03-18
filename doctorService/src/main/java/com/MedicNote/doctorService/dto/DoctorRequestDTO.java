@@ -25,7 +25,7 @@ public class DoctorRequestDTO {
     private String doctorPhone;
 
     @NotBlank(message = "Specialization is required")
-    private String doctorSpecialization;
+    private String specialization;
 
     private String licenseNumber;
     private Integer experienceYears;

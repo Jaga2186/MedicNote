@@ -21,5 +21,5 @@ public interface DoctorService {
 
     void deleteDoctorById(Long doctorId);
 
-    Boolean checkDoctorByEmail(String email);
+    Boolean checkByDoctorEmail(String email);
 }

@@ -15,7 +15,6 @@ public interface DTOMapper {
     /**
      * Maps DoctorRequestDTO to Doctor entity
      */
-    @Mapping(target = "doctorExperience", source = "experienceYears")
     @Mapping(target = "isActive", constant = "true")
     @Mapping(target = "doctorId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
@@ -25,7 +24,6 @@ public interface DTOMapper {
     /**
      * Maps Doctor entity to DoctorResponseDTO
      */
-    @Mapping(target = "experienceYears", source = "doctorExperience")
     DoctorResponseDTO entityToResponseDTO(Doctor doctor);
 
 }

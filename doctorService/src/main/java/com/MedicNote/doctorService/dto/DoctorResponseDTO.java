@@ -11,7 +11,7 @@ public class DoctorResponseDTO {
     private String doctorName;
     private String doctorEmail;
     private String doctorPhone;
-    private String doctorSpecialization;
+    private String specialization;
 
     private String licenseNumber;
     private Integer experienceYears;

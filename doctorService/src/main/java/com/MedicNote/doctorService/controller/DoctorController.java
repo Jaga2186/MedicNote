@@ -152,7 +152,7 @@ public class DoctorController {
 
         log.info("Checking doctor by email: {}", email);
 
-        Boolean exists = doctorService.checkDoctorByEmail(email);
+        Boolean exists = doctorService.checkByDoctorEmail(email);
 
         Map<String, Object> result = new HashMap<>();
 
