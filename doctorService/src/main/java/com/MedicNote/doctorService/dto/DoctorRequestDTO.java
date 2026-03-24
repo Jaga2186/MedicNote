@@ -15,7 +15,6 @@ public class DoctorRequestDTO {
     @Email(message = "Invalid email format")
     private String doctorEmail;
 
-    @NotBlank(message = "password is required")
     @Pattern(
             regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*?&]).{6,}$",
             message = "Password must be at least 6 characters and include letter, number, and special character"

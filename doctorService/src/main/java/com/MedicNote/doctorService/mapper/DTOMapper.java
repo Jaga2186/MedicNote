@@ -5,13 +5,9 @@ import com.MedicNote.doctorService.dto.DoctorResponseDTO;
 import com.MedicNote.doctorService.entity.Doctor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface DTOMapper {
-
-    DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
-
     /**
      * Maps DoctorRequestDTO to Doctor entity
      */
