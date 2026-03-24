@@ -134,9 +134,11 @@ public class DoctorServiceImplementation implements DoctorService {
             throw new BadRequestException("Specialization cannot be null or blank");
         }
 
-        List<Doctor> doctors = doctorRepository.findBySpecialization(specialization);
+        String cleaned = specialization.trim();
 
-        log.info("Found {} doctors with specialization {}", doctors.size(), specialization);
+        List<Doctor> doctors = doctorRepository.findBySpecializationIgnoreCase(cleaned);
+
+        log.info("Found {} doctors with specialization {}", doctors.size(), cleaned);
 
         return doctors.stream().map(mapper::entityToResponseDTO).collect(Collectors.toList());
     }
@@ -198,7 +200,7 @@ public class DoctorServiceImplementation implements DoctorService {
 
         if(!doctorRepository.existsById(doctorId)) {
             log.warn("Delete failed - doctor not found with ID: {}", doctorId);
-            throw new DoctorNotFoundException("Doctor not found");
+            throw new DoctorNotFoundException(doctorId);
         }
 
         doctorRepository.deleteById(doctorId);
