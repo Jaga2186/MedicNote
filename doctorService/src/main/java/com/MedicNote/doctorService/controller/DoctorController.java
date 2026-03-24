@@ -51,9 +51,12 @@ public class DoctorController {
 
         log.info("Doctor login attempt for email: {}", request.getEmail());
 
-        DoctorResponseDTO doctor = doctorService.loginDoctor(request.getEmail(), request.getPassword());
+        DoctorResponseDTO doctor = doctorService.loginDoctor(
+                request.getEmail().trim().toLowerCase(),
+                request.getPassword()
+        );
 
-        String token = jwtUtility.generateToken(request.getEmail());
+        String token = jwtUtility.generateToken(request.getEmail().trim().toLowerCase());
 
         return ResponseEntity.ok(
                 Map.of(
