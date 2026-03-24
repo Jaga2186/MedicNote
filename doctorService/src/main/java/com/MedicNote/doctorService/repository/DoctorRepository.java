@@ -9,5 +9,5 @@ import java.util.List;
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
     Optional<Doctor> findByDoctorEmail(String email);
     Boolean existsByDoctorEmail(String email);
-    List<Doctor> findBySpecialization(String specialization);
+    List<Doctor> findBySpecializationIgnoreCase(String specialization);
 }
