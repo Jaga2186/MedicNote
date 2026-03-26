@@ -2,9 +2,20 @@ package com.MedicNote.patientService.dto;
 
 import lombok.Data;
 
+import jakarta.validation.constraints.*;
+
 @Data
 public class EmergencyContactDTO {
+
+    @NotBlank(message = "Contact name is required")
+    @Size(max = 100, message = "Contact name must be less than 100 characters")
     private String name;
+
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^[6-9]\\d{9}$", message = "Phone number should be valid")
     private String phone;
-    private String relation;
+
+    @NotBlank(message = "Relation is required")
+    @Size(max = 50, message = "Relation must be less than 50 characters")
+    private String relation; // ✅ matches entity
 }
