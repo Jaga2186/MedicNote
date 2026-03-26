@@ -2,7 +2,9 @@ package com.MedicNote.patientService.dto;
 
 import lombok.Data;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 
 @Data
 public class AddressDTO {

@@ -2,7 +2,8 @@ package com.MedicNote.patientService.dto;
 
 import lombok.Data;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import com.MedicNote.patientService.entity.BloodGroup;
 
