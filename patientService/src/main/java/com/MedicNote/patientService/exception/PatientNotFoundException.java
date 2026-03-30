@@ -1,4 +1,12 @@
 package com.MedicNote.patientService.exception;
 
-public class PatientNotFoundException {
+public class PatientNotFoundException extends RuntimeException {
+
+    public PatientNotFoundException(String message) {
+        super(message);
+    }
+
+    public PatientNotFoundException(Long patientId) {
+        super("Patient not found with id: " + patientId);
+    }
 }
