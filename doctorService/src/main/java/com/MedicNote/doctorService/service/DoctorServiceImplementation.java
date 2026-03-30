@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -30,190 +29,195 @@ public class DoctorServiceImplementation implements DoctorService {
     private final DTOMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public DoctorResponseDTO registerDoctor(DoctorRequestDTO doctorRequestDTO) {
 
-        String email = doctorRequestDTO.getDoctorEmail().trim().toLowerCase();
-        
-        if(email.isBlank()) {
-            throw new BadRequestException("Email is required");
-        }
-        
-        log.info("Register request received for email: {}", email);
-
-        if(doctorRepository.existsByDoctorEmail(email)) {
-            log.warn("Registration failed - email already exists: {} ", email);
-            throw new DoctorAlreadyExistsException("Doctor already exists");
-        }
-
-        Doctor doctor = mapper.requestDTOtoEntity(doctorRequestDTO);
-
-        doctor.setDoctorEmail(email);
-        doctor.setDoctorName(doctorRequestDTO.getDoctorName().trim());
-        doctor.setHospitalName(doctorRequestDTO.getHospitalName().trim());
-        doctor.setDoctorPassword(passwordEncoder.encode(doctorRequestDTO.getDoctorPassword()));
-        doctor.setIsActive(true);
-
-        Doctor savedDoctor = doctorRepository.save(doctor);
-
-        log.info("Doctor registered successfully with ID: {}", savedDoctor.getDoctorId());
-
-        return mapper.entityToResponseDTO(savedDoctor);
+    public DoctorRepository getDoctorRepository() {
+        return doctorRepository;
     }
 
+    // =========================================================
+    // REGISTER DOCTOR
+    // =========================================================
+    @Override
+    public DoctorResponseDTO registerDoctor(DoctorRequestDTO dto) {
+
+        if (dto == null) throw new BadRequestException("Request body cannot be null");
+
+        String email = normalizeEmail(dto.getDoctorEmail());
+        String name = requireText(dto.getDoctorName(), "Doctor name");
+        String hospital = requireText(dto.getHospitalName(), "Hospital name");
+        String password = requireText(dto.getDoctorPassword(), "Password");
+
+        log.info("Register request for doctor email: {}", email);
+
+        if (doctorRepository.existsByDoctorEmail(email))
+            throw new DoctorAlreadyExistsException("Doctor already exists with email: " + email);
+
+        Doctor doctor = mapper.requestDTOtoEntity(dto);
+        doctor.setDoctorEmail(email);
+        doctor.setDoctorName(name);
+        doctor.setHospitalName(hospital);
+        doctor.setDoctorPassword(passwordEncoder.encode(password));
+        doctor.setIsActive(true);
+
+        Doctor saved = doctorRepository.save(doctor);
+        log.info("Doctor registered successfully. ID={}", saved.getDoctorId());
+
+        return mapper.entityToResponseDTO(saved);
+    }
+
+    // =========================================================
+    // LOGIN DOCTOR
+    // =========================================================
     @Override
     @Transactional(readOnly = true)
     public DoctorResponseDTO loginDoctor(String email, String password) {
-        String normalizedEmail =  email.trim().toLowerCase();
-        log.info("Login attempt for email: {}", normalizedEmail);
+
+        String normalizedEmail = normalizeEmail(email);
+
+        if (password == null || password.isBlank())
+            throw new BadRequestException("Password cannot be blank");
+
+        log.info("Doctor login attempt: {}", normalizedEmail);
 
         Doctor doctor = doctorRepository.findByDoctorEmail(normalizedEmail)
-                .orElseThrow(() -> {
-                    log.warn("Login failed - doctor not found for email: {}", normalizedEmail);
-                    return new DoctorNotFoundException(normalizedEmail);
-                });
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        if(!doctor.getIsActive()) {
-            log.warn("Login failed - account inactive for email: {}", normalizedEmail);
+        if (!doctor.getIsActive())
             throw new InvalidCredentialsException("Account is inactive");
-        }
 
-        if(!passwordEncoder.matches(password, doctor.getDoctorPassword())) {
-            log.warn("Login failed - invalid credential for email: {}", normalizedEmail);
+        if (!passwordEncoder.matches(password, doctor.getDoctorPassword()))
             throw new InvalidCredentialsException("Invalid email or password");
-        }
 
-        log.info("Login successful for doctor ID: {}", doctor.getDoctorId());
-
+        log.info("Doctor login success. ID={}", doctor.getDoctorId());
         return mapper.entityToResponseDTO(doctor);
     }
 
+    // =========================================================
+    // GET ALL DOCTORS
+    // =========================================================
     @Override
     @Transactional(readOnly = true)
     public List<DoctorResponseDTO> getAllDoctors() {
 
         log.info("Fetching all doctors");
 
-        List<Doctor> doctors = doctorRepository.findAll();
-
-        log.info("Found {} doctors", doctors.size());
-
-        return doctors.stream().map(mapper::entityToResponseDTO).collect(Collectors.toList());
+        return doctorRepository.findAll()
+                .stream()
+                .map(mapper::entityToResponseDTO)
+                .toList();
     }
 
+    // =========================================================
+    // GET DOCTOR BY ID
+    // =========================================================
     @Override
     @Transactional(readOnly = true)
     public DoctorResponseDTO getDoctorById(Long doctorId) {
 
-        log.info("Fetching doctor with Id: {}", doctorId);
-
-        if(doctorId == null) {
-            log.error("Doctor ID is null");
-            throw new BadRequestException("Doctor id cannot be null");
-        }
+        validateId(doctorId);
 
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> {
-                    log.warn("Doctor not found with ID: {}", doctorId);
-                    return new DoctorNotFoundException(doctorId);
-                });
-
-        log.info("Doctor found with ID: {}", doctorId);
+                .orElseThrow(() -> new DoctorNotFoundException(doctorId));
 
         return mapper.entityToResponseDTO(doctor);
     }
 
+    // =========================================================
+    // GET DOCTOR BY SPECIALIZATION
+    // =========================================================
     @Override
     @Transactional(readOnly = true)
     public List<DoctorResponseDTO> getDoctorBySpecialization(String specialization) {
 
-        log.info("Fetching doctors by specialization: {}", specialization);
+        String spec = requireText(specialization, "Specialization");
 
-        if(specialization == null || specialization.isBlank()) {
-            log.error("Specialization is null or blank");
-            throw new BadRequestException("Specialization cannot be null or blank");
-        }
-
-        String cleaned = specialization.trim();
-
-        List<Doctor> doctors = doctorRepository.findBySpecializationIgnoreCase(cleaned);
-
-        log.info("Found {} doctors with specialization {}", doctors.size(), cleaned);
-
-        return doctors.stream().map(mapper::entityToResponseDTO).collect(Collectors.toList());
+        return doctorRepository.findBySpecializationIgnoreCase(spec)
+                .stream()
+                .map(mapper::entityToResponseDTO)
+                .toList();
     }
 
+    // =========================================================
+    // UPDATE DOCTOR
+    // =========================================================
     @Override
-    public DoctorResponseDTO updateDoctorById(Long doctorId, DoctorRequestDTO doctorRequestDTO) {
+    public DoctorResponseDTO updateDoctorById(Long doctorId, DoctorRequestDTO dto) {
 
-        log.info("Updating doctor with Id: {}", doctorId);
-
-        if(doctorId == null) {
-            log.error("Doctor ID is null");
-            throw new BadRequestException("Doctor id cannot be null");
-        }
+        validateId(doctorId);
+        if (dto == null) throw new BadRequestException("Request body cannot be null");
 
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(()-> {
-                    log.warn("Update failed - doctor not found with ID: {}", doctorId);
-                    return new DoctorNotFoundException(doctorId);
-                });
+                .orElseThrow(() -> new DoctorNotFoundException(doctorId));
 
-        String normalizedEmail = doctorRequestDTO.getDoctorEmail().trim().toLowerCase();
+        String newEmail = normalizeEmail(dto.getDoctorEmail());
 
-        if(!doctor.getDoctorEmail().equals(normalizedEmail) &&
-            doctorRepository.existsByDoctorEmail(normalizedEmail)) {
-            log.info("Update failed - email already exists: {}", normalizedEmail);
-            throw new DoctorAlreadyExistsException("Email already exists");
+        if (!doctor.getDoctorEmail().equals(newEmail) &&
+                doctorRepository.existsByDoctorEmail(newEmail))
+            throw new DoctorAlreadyExistsException("Email already in use: " + newEmail);
+
+        doctor.setDoctorName(requireText(dto.getDoctorName(), "Doctor name"));
+        doctor.setDoctorEmail(newEmail);
+        doctor.setDoctorPhone(dto.getDoctorPhone());
+        doctor.setSpecialization(dto.getSpecialization());
+        doctor.setLicenseNumber(dto.getLicenseNumber());
+        doctor.setExperienceYears(dto.getExperienceYears());
+        doctor.setHospitalName(requireText(dto.getHospitalName(), "Hospital name"));
+
+        // password update only if provided
+        if (dto.getDoctorPassword() != null && !dto.getDoctorPassword().isBlank()) {
+            doctor.setDoctorPassword(passwordEncoder.encode(dto.getDoctorPassword()));
+            log.info("Password updated for doctor {}", doctorId);
         }
 
-        doctor.setDoctorName(doctorRequestDTO.getDoctorName().trim());
-        doctor.setDoctorEmail(normalizedEmail);
-        doctor.setDoctorPhone(doctorRequestDTO.getDoctorPhone());
-        doctor.setSpecialization(doctorRequestDTO.getSpecialization());
-        doctor.setLicenseNumber(doctorRequestDTO.getLicenseNumber());
-        doctor.setExperienceYears(doctorRequestDTO.getExperienceYears());
-        doctor.setHospitalName(doctorRequestDTO.getHospitalName().trim());
+        Doctor updated = doctorRepository.save(doctor);
+        log.info("Doctor updated successfully ID={}", doctorId);
 
-        if(doctorRequestDTO.getDoctorPassword() != null && !doctorRequestDTO.getDoctorPassword().isBlank()) {
-            doctor.setDoctorPassword(passwordEncoder.encode(doctorRequestDTO.getDoctorPassword()));
-            log.info("Password updated for doctor ID: {}", doctorId);
-        }
-
-        Doctor updatedDoctor = doctorRepository.save(doctor);
-
-        log.info("Doctor updated successfully with Id: {}", doctorId);
-
-        return mapper.entityToResponseDTO(updatedDoctor);
+        return mapper.entityToResponseDTO(updated);
     }
 
+    // =========================================================
+    // DELETE DOCTOR
+    // =========================================================
     @Override
-    @Transactional
     public void deleteDoctorById(Long doctorId) {
 
-        log.info("Deleting doctor with Id: {}", doctorId);
+        validateId(doctorId);
 
-        if(doctorId == null) {
-            log.error("Doctor ID is null");
-            throw new BadRequestException("Doctor id cannot be null");
-        }
+        Doctor doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new DoctorNotFoundException(doctorId));
 
-        if(!doctorRepository.existsById(doctorId)) {
-            log.warn("Delete failed - doctor not found with ID: {}", doctorId);
-            throw new DoctorNotFoundException(doctorId);
-        }
+        doctor.setIsActive(false);
+        doctorRepository.save(doctor);
 
-        doctorRepository.deleteById(doctorId);
-
-        log.info("Doctor deleted successfully with ID: {}", doctorId);
+        log.info("Doctor deleted ID={}", doctorId);
     }
 
+    // =========================================================
+    // CHECK EMAIL EXISTS
+    // =========================================================
     @Override
     public Boolean checkByDoctorEmail(String email) {
+        return doctorRepository.existsByDoctorEmail(normalizeEmail(email));
+    }
 
-        String normalizedEmail = email.trim().toLowerCase();
-        log.debug("Checking if email exists {}", normalizedEmail);
+    // =========================================================
+    // PRIVATE VALIDATION HELPERS
+    // =========================================================
 
-        return doctorRepository.existsByDoctorEmail(normalizedEmail);
+    private void validateId(Long id) {
+        if (id == null || id <= 0)
+            throw new BadRequestException("Invalid ID");
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null || email.isBlank())
+            throw new BadRequestException("Email cannot be blank");
+        return email.trim().toLowerCase();
+    }
+
+    private String requireText(String value, String field) {
+        if (value == null || value.isBlank())
+            throw new BadRequestException(field + " cannot be blank");
+        return value.trim();
     }
 }
