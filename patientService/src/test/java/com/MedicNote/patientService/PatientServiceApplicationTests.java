@@ -1,4 +1,4 @@
-package com.NedicNote.patientService;
+package com.MedicNote.patientService;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
