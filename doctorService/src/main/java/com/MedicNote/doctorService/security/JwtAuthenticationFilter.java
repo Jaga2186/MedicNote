@@ -19,10 +19,13 @@ import java.io.IOException;
 import java.util.Collections;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtility jwtUtility;
+
+    public JwtAuthenticationFilter(JwtUtility jwtUtility) {
+        this.jwtUtility = jwtUtility;
+    }
 
     @Override
     protected void doFilterInternal(

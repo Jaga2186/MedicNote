@@ -48,9 +48,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/doctors/register",
-                                "/doctors/login",
-                                "/doctors/check-email/**"
+                                "/api/doctors/register",
+                                "/api/doctors/login",
+                                "/api/doctors/check-email/**",
+                                "/swagger-ui/**"
+
                         ).permitAll()
 
                         .anyRequest().authenticated()
