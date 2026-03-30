@@ -1,7 +1,9 @@
 package com.MedicNote.patientService.dto;
 
+import com.MedicNote.patientService.entity.Gender;
 import lombok.Data;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class PatientResponseDTO {
@@ -11,9 +13,13 @@ public class PatientResponseDTO {
     private String patientEmail;
     private String patientPhone;
     private LocalDate dateOfBirth;
-    private String gender;
+    private Gender gender;
 
     private AddressDTO address;
     private EmergencyContactDTO emergencyContact;
     private MedicalInfoDTO medicalInfo;
+
+    private Boolean isActive;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
