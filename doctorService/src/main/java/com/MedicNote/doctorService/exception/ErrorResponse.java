@@ -1,27 +1,21 @@
 package com.MedicNote.doctorService.exception;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class ErrorResponse {
 
-    private int status;
-    private String message;
-    private String error;
     private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
     private String path;
-
-    public ErrorResponse(int status, String message, String error) {
-        this.status = status;
-        this.message = message;
-        this.error = error;
-        this.timestamp = LocalDateTime.now();
-    }
-
+    private String method;
+    private String traceId;
+    private Map<String, String> validationErrors;
 }

@@ -1,127 +1,120 @@
 package com.MedicNote.doctorService.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(DoctorNotFoundException.class) 
-    public ResponseEntity<ErrorResponse> handleDoctorNotFoundException(
-            DoctorNotFoundException ex, WebRequest request) {
+    private ErrorResponse buildError(
+            HttpStatus status,
+            String message,
+            ErrorCode errorCode,
+            HttpServletRequest request,
+            Map<String, String> validationErrors) {
 
-        log.error("Doctor not found: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = new ErrorResponse();
-
-        errorResponse.setStatus(HttpStatus.NOT_FOUND.value());
-        errorResponse.setMessage(ex.getMessage());
-        errorResponse.setError("Doctor Not Found");
-        errorResponse.setTimestamp(LocalDateTime.now());
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(status.value())
+                .error(errorCode.name())
+                .message(message)
+                .path(request.getRequestURI())
+                .method(request.getMethod())
+                .traceId(UUID.randomUUID().toString().substring(0,12))
+                .validationErrors(validationErrors)
+                .build();
     }
 
+    // ================= DOCTOR NOT FOUND =================
+    @ExceptionHandler(DoctorNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDoctorNotFound(
+            DoctorNotFoundException ex, HttpServletRequest request) {
+
+        log.warn("Doctor not found: {}", ex.getMessage());
+
+        return new ResponseEntity<>(
+                buildError(HttpStatus.NOT_FOUND, ex.getMessage(),
+                        ErrorCode.DOCTOR_NOT_FOUND, request, null),
+                HttpStatus.NOT_FOUND);
+    }
+
+    // ================= DOCTOR EXISTS =================
     @ExceptionHandler(DoctorAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleDoctorAlreadyExistsException(
-            DoctorAlreadyExistsException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleDoctorExists(
+            DoctorAlreadyExistsException ex, HttpServletRequest request) {
 
-        log.error("Doctor already exists: {}", ex.getMessage());
+        log.warn("Doctor already exists: {}", ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse();
-
-        errorResponse.setStatus(HttpStatus.CONFLICT.value());
-        errorResponse.setMessage(ex.getMessage());
-        errorResponse.setError("Doctor Already Exists");
-        errorResponse.setTimestamp(LocalDateTime.now());
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(
+                buildError(HttpStatus.CONFLICT, ex.getMessage(),
+                        ErrorCode.DOCTOR_ALREADY_EXISTS, request, null),
+                HttpStatus.CONFLICT);
     }
 
+    // ================= INVALID CREDENTIALS =================
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidCredentialsException (
-            InvalidCredentialsException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException ex, HttpServletRequest request) {
 
-        log.error("Invalid Credentials: {}", ex.getMessage());
+        log.warn("Invalid credentials: {}", ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse();
-
-        errorResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
-        errorResponse.setMessage(ex.getMessage());
-        errorResponse.setError("Invalid Credentials");
-        errorResponse.setTimestamp(LocalDateTime.now());
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(
+                buildError(HttpStatus.UNAUTHORIZED, ex.getMessage(),
+                        ErrorCode.INVALID_CREDENTIALS, request, null),
+                HttpStatus.UNAUTHORIZED);
     }
 
+    // ================= BAD REQUEST =================
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequestException(
-            BadRequestException ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleBadRequest(
+            BadRequestException ex, HttpServletRequest request) {
 
-        log.error("Bad Request: {}", ex.getMessage());
+        log.warn("Bad request: {}", ex.getMessage());
 
-        ErrorResponse response = new ErrorResponse();
-
-        response.setStatus(HttpStatus.BAD_REQUEST.value());
-        response.setMessage(ex.getMessage());
-        response.setError("Bad Request");
-        response.setTimestamp(LocalDateTime.now());
-        response.setPath(request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(
+                buildError(HttpStatus.BAD_REQUEST, ex.getMessage(),
+                        ErrorCode.BAD_REQUEST, request, null),
+                HttpStatus.BAD_REQUEST);
     }
 
+    // ================= VALIDATION =================
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException (
-            MethodArgumentNotValidException ex, WebRequest request) {
-
-        log.error("Validation error: {}", ex.getMessage());
+    public ResponseEntity<ErrorResponse> handleValidation(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
 
-        ex.getBindingResult().getFieldErrors().forEach(
-                error -> errors.put(error.getField(), error.getDefaultMessage())
-        );
-
-        ErrorResponse response = new ErrorResponse();
-
-        response.setStatus(HttpStatus.BAD_REQUEST.value());
-        response.setMessage("Validation Failed");
-        response.setError(errors.toString());
-        response.setTimestamp(LocalDateTime.now());
-        response.setPath(request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(
+                buildError(HttpStatus.BAD_REQUEST, "Validation failed",
+                        ErrorCode.VALIDATION_FAILED, request, errors),
+                HttpStatus.BAD_REQUEST);
     }
 
+    // ================= GLOBAL =================
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleGlobal(
+            Exception ex, HttpServletRequest request) {
 
-        log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
+        log.error("Unexpected error", ex);
 
-        ErrorResponse errorResponse = new ErrorResponse();
-
-        errorResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        errorResponse.setMessage("An unexpected error occurred. Please try again later.");
-        errorResponse.setError(ex.getClass().getSimpleName());
-        errorResponse.setTimestamp(LocalDateTime.now());
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(
+                buildError(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Unexpected error occurred",
+                        ErrorCode.INTERNAL_SERVER_ERROR, request, null),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
