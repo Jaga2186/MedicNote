@@ -37,7 +37,7 @@ public class Patient {
     @Column(name = "patient_password", nullable = false)
     private String patientPassword;
 
-    @Column(name = "patient_phone", nullable = false, length = 10)
+    @Column(name = "patient_phone", nullable = false, length = 10, unique = true)
     private String patientPhone;
 
     @Column(name = "date_of_birth", nullable = false)

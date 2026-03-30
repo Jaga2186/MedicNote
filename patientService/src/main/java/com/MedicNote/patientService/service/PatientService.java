@@ -6,8 +6,9 @@ import com.MedicNote.patientService.dto.*;
 public interface PatientService {
 
     PatientResponseDTO registerPatient(PatientRequestDTO request);
-    PatientResponseDTO getPatientById(Long id);
+    PatientResponseDTO loginPatient(String email, String password);
+    PatientResponseDTO getPatientById(Long patientId);
     List<PatientResponseDTO> getAllPatients();
-    PatientResponseDTO updatePatient(Long id, PatientRequestDTO request);
-    void deletePatient(Long id);
+    PatientResponseDTO updatePatient(Long patientId, PatientRequestDTO request);
+    void deletePatient(Long patientId);
 }
