@@ -1,0 +1,61 @@
+# ============================================
+# Doctor Service - Production Configuration
+# ============================================
+# This file contains environment-specific properties for production
+# Override values from application.yaml when spring.profiles.active=prod
+
+logging:
+  level:
+    root: WARN
+    com:
+      MedicNote:
+        doctorService: INFO
+    org:
+      springframework:
+        web: WARN
+      hibernate:
+        SQL: WARN
+        type:
+          descriptor:
+            sql:
+              BasicBinder: WARN
+
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        generate_statistics: false
+
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-exception: false
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    max-connections: 10000
+    accept-count: 100
