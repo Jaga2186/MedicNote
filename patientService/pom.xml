@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -16,14 +17,17 @@
 	<artifactId>patientService</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>patientService</name>
+	<description>MedicNote Patient Service</description>
 
 	<properties>
 		<java.version>21</java.version>
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<lombok.version>1.18.42</lombok.version>
+		<dotenv.version>2.3.2</dotenv.version>
 	</properties>
 
+	<!-- ================= DEPENDENCIES ================= -->
 	<dependencies>
 
 		<!-- Spring Boot Core -->
@@ -48,7 +52,7 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
-		<!-- Eureka -->
+		<!-- Eureka Client -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
@@ -61,22 +65,14 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Lombok -->
+		<!-- DotEnv - For loading .env files -->
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>provided</scope>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>${dotenv.version}</version>
 		</dependency>
 
-		<!-- MapStruct -->
-		<dependency>
-			<groupId>org.mapstruct</groupId>
-			<artifactId>mapstruct</artifactId>
-			<version>${mapstruct.version}</version>
-		</dependency>
-
-		<!-- JWT -->
+		<!-- JWT - CHANGED: Updated from 0.11.5 to 0.12.3 -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
@@ -97,6 +93,35 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- MapStruct -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${mapstruct.version}</version>
+		</dependency>
+
+		<!-- Swagger / OpenAPI (Spring Boot 3 compatible) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.6.0</version>
+		</dependency>
+
+		<!-- Testing -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 		<!--H2 Database-->
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -104,21 +129,9 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Test -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>me.paulschwarz</groupId>
-			<artifactId>spring-dotenv</artifactId>
-			<version>4.0.0</version>
-		</dependency>
-
 	</dependencies>
 
+	<!-- ================= SPRING CLOUD ================= -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -131,10 +144,11 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<!-- ================= BUILD ================= -->
 	<build>
 		<plugins>
 
-			<!-- Compiler Plugin (FIXED MAPSTRUCT) -->
+			<!-- Compiler Plugin (Lombok + MapStruct) -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -145,21 +159,17 @@
 					<target>${java.version}</target>
 
 					<annotationProcessorPaths>
-
-						<!-- Lombok -->
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
 							<version>${lombok.version}</version>
 						</path>
 
-						<!-- MapStruct Processor -->
 						<path>
 							<groupId>org.mapstruct</groupId>
 							<artifactId>mapstruct-processor</artifactId>
 							<version>${mapstruct.version}</version>
 						</path>
-
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
