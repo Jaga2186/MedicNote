@@ -1,20 +1,58 @@
+# ============================================
+# Patient Service - Test Configuration
+# ============================================
+# This file contains environment-specific properties for testing
+# Override values from application.yaml when spring.profiles.active=test
+
+logging:
+  level:
+    root: WARN
+    com:
+      MedicNote:
+        patientService: DEBUG
+    org:
+      springframework:
+        web: WARN
+      hibernate:
+        SQL: WARN
+        type:
+          descriptor:
+            sql:
+              BasicBinder: WARN
+
 spring:
   datasource:
     url: jdbc:h2:mem:testdb
-    driverClassName: org.h2.Driver
+    driver-class-name: org.h2.Driver
     username: sa
     password:
 
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create-drop   # recreate DB for each test run
     show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        generate_statistics: false
 
   h2:
     console:
+      enabled: false   # keep disabled in automated tests
+
+  devtools:
+    restart:
+      enabled: false
+    livereload:
       enabled: false
 
 eureka:
   client:
-    enabled: false
+    enabled: false   # disable service discovery during tests
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-exception: false
