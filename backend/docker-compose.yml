@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: medicnote-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: medicnote_doctor
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - medicnote-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eureka-server:
+    build: ./eurekaServer
+    container_name: medicnote-eureka
+    ports:
+      - "8761:8761"
+    networks:
+      - medicnote-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  doctor-service:
+    build: ./doctorService
+    container_name: medicnote-doctor
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/medicnote_doctor?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - medicnote-network
+
+  patient-service:
+    build: ./patientService
+    container_name: medicnote-patient
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/medicnote_patient?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - medicnote-network
+
+  auth-service:
+    build: ./authService
+    container_name: medicnote-auth
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      doctor-service:
+        condition: service_started
+      patient-service:
+        condition: service_started
+    networks:
+      - medicnote-network
+
+  prescription-service:
+    build: ./prescriptionService
+    container_name: medicnote-prescription
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/medicnote_prescription?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+      MAIL_HOST: smtp.gmail.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: your-email@gmail.com
+      MAIL_PASSWORD: your-app-password
+    depends_on:
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      doctor-service:
+        condition: service_started
+      patient-service:
+        condition: service_started
+    networks:
+      - medicnote-network
+
+  api-gateway:
+    build: ./apiGateway
+    container_name: medicnote-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - medicnote-network
+
+volumes:
+  mysql_data:
+
+networks:
+  medicnote-network:
+    driver: bridge

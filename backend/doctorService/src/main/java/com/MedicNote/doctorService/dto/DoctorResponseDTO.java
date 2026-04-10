@@ -1,0 +1,27 @@
+package com.MedicNote.doctorService.dto;
+
+import java.time.LocalDateTime;
+
+import lombok.Data;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Doctor response")
+@Data
+public class DoctorResponseDTO {
+    
+    @Schema(description = "Doctor ID", example = "1")
+    private Long doctorId;
+    private String doctorName;
+    private String doctorEmail;
+    private String doctorPhone;
+    private String specialization;
+
+    private String licenseNumber;
+    private Integer experienceYears;
+    private String hospitalName;
+
+    private Boolean isActive;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}

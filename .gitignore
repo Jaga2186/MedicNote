@@ -1,5 +1,10 @@
 .idea/
 .vscode/
 target/
+.devin/
 *.log
 .env
+
+# Frontend
+node_modules/
+dist/

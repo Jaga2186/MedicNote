@@ -1,0 +1,47 @@
+# ============================================
+# Prescription Service - Development Configuration
+# ============================================
+# Override values from application.yaml when spring.profiles.active=dev
+
+logging:
+  level:
+    root: INFO
+    com:
+      MedicNote:
+        prescriptionService: DEBUG
+    org:
+      springframework:
+        web: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+spring:
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        generate_statistics: false
+
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+server:
+  error:
+    include-message: always
+    include-stacktrace: on-param
+    include-exception: true
