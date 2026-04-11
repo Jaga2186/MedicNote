@@ -77,13 +77,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- DotEnv - For loading .env files -->
-		<dependency>
-			<groupId>io.github.cdimascio</groupId>
-			<artifactId>dotenv-java</artifactId>
-			<version>${dotenv.version}</version>
-		</dependency>
-
 		<!-- JWT -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

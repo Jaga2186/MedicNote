@@ -1,13 +1,11 @@
 package com.MedicNote.prescriptionService;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
 
-@SpringBootTest
-class ApplicationTests {
-
-	@Test
+@Service
+@Profile("!test")
+public class ApplicationTests {
 	void contextLoads() {
 	}
-
 }

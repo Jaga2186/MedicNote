@@ -1,4 +1,4 @@
-package com.MedicNote.patientService.security;
+package com.MedicNote.authService.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -6,25 +6,24 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtility jwtUtility;
-
-    public JwtAuthenticationFilter(JwtUtility jwtUtility) {
-        this.jwtUtility = jwtUtility;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -34,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
+        // 🔓 Swagger bypass
         if (path.contains("/swagger-ui") ||
                 path.contains("/v3/api-docs") ||
                 path.contains("/swagger-resources") ||
@@ -42,8 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (path.contains("/api/patients/register") ||
-                path.contains("/api/patients/login")) {
+        // 🔓 Public auth APIs
+        if (path.contains("/auth/login") ||
+                path.contains("/auth/register")) {
             filterChain.doFilter(request, response);
             return;
         }

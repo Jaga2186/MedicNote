@@ -1,20 +1,20 @@
 server:
-  port: ${SERVER_PORT:8082}
+  port: 8082
 
 spring:
   application:
-    name: ${APP_NAME:DOCTOR-SERVICE}
+    name: DOCTOR-SERVICE
 
   datasource:
-    url: ${DOCTOR_DB_URL}
-    username: ${DOCTOR_DB_USERNAME}
-    password: ${DOCTOR_DB_PASSWORD}
-    driver-class-name: ${DOCTOR_DB_DRIVER:com.mysql.cj.jdbc.Driver}
+    url: jdbc:mysql://localhost:3306/medicnote_doctor
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO:validate}
-    show-sql: ${JPA_SHOW_SQL:false}
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -22,28 +22,26 @@ spring:
 
 eureka:
   client:
-    enabled: ${EUREKA_ENABLED:true}
-    register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
-    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: http://localhost:8761/eureka/
   instance:
-    hostname: ${EUREKA_HOSTNAME:localhost}
-    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
+    instance-id: DOCTOR-SERVICE:8082
     prefer-ip-address: false
 
 logging:
   level:
-    root: ${LOGGING_LEVEL_ROOT:INFO}
-    com.MedicNote.doctorService: ${LOGGING_LEVEL_DOCTOR_SERVICE:INFO}
-    org.hibernate.SQL: ${LOGGING_LEVEL_HIBERNATE_SQL:WARN}
-    org.hibernate.type.descriptor.sql: ${LOGGING_LEVEL_HIBERNATE_TYPE:WARN}
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    root: INFO
+    com.MedicNote.doctorService: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
 
 jwt:
-  secret: ${JWT_SECRET:defaultvalue}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: mysupersecretkeymysupersecretkey123456
+  expiration: 86400000   # 1 day in ms
 
 management:
   endpoints:
@@ -53,3 +51,9 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

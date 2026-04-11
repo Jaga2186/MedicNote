@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<groupId>com.MedicNote</groupId>
-	<artifactId>medicnote-parent</artifactId>
+	<artifactId>Backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>MedicNote Parent</name>
-	<description>Parent POM for MedicNote Microservices</description>
+	<name>Backend</name>
+	<description>Backend microservices for MedicNote</description>
 
 	<modules>
 		<module>eurekaServer</module>

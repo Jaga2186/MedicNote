@@ -22,6 +22,7 @@ import java.util.List;
 @Component
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     private final JwtUtility jwtUtility;
 
     public JwtAuthenticationFilter(JwtUtility jwtUtility) {
@@ -29,12 +30,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
+    protected void doFilterInternal(HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+
+        // 🔓 1️⃣ Skip Swagger endpoints
+        if (path.contains("/swagger-ui") ||
+                path.contains("/v3/api-docs") ||
+                path.contains("/swagger-resources") ||
+                path.contains("/webjars")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 🔓 2️⃣ Skip public Doctor APIs
+        if (path.contains("/api/doctors/register") ||
+                path.contains("/api/doctors/login") ||
+                path.contains("/api/doctors/check-email")) {
+
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 3️⃣ Read Authorization header
         final String authorizationHeader = request.getHeader("Authorization");
 
         String email = null;
@@ -55,12 +77,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.warn("Invalid JWT token for URI {}: {}", request.getRequestURI(), e.getMessage());
         }
 
+        // 4️⃣ Validate token and set authentication
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             if (jwtUtility.validateToken(token, email)) {
 
                 List<SimpleGrantedAuthority> authorities = new ArrayList<>();
                 String role = jwtUtility.extractRole(token);
+
                 if (role != null && !role.isBlank()) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                 }
@@ -72,7 +96,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 authorities
                         );
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 

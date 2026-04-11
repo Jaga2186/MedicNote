@@ -1,9 +1,9 @@
 server:
-  port: ${SERVER_PORT:8084}
+  port: 8084
 
 spring:
   application:
-    name: ${APP_NAME:PRESCRIPTION-SERVICE}
+    name: PRESCRIPTION-SERVICE
 
   cloud:
     openfeign:
@@ -11,25 +11,25 @@ spring:
         enabled: true
 
   datasource:
-    url: ${PRESCRIPTION_DB_URL}
-    username: ${PRESCRIPTION_DB_USERNAME}
-    password: ${PRESCRIPTION_DB_PASSWORD}
-    driver-class-name: ${PRESCRIPTION_DB_DRIVER:com.mysql.cj.jdbc.Driver}
+    url: jdbc:mysql://localhost:3306/medicnote_prescription
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: ${JPA_HIBERNATE_DDL_AUTO:validate}
-    show-sql: ${JPA_SHOW_SQL:false}
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    host: smtp.gmail.com
+    port: 587
+    username: medicnote@gmail.com
+    password: hnod tpdh stxd mqhs
     properties:
       mail:
         smtp:
@@ -39,28 +39,26 @@ spring:
 
 eureka:
   client:
-    enabled: ${EUREKA_ENABLED:true}
-    register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
-    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: http://localhost:8761/eureka/
   instance:
-    hostname: ${EUREKA_HOSTNAME:localhost}
-    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
+    instance-id: PRESCRIPTION-SERVICE:8084
     prefer-ip-address: false
 
 logging:
   level:
-    root: ${LOGGING_LEVEL_ROOT:INFO}
-    com.MedicNote.prescriptionService: ${LOGGING_LEVEL_PRESCRIPTION_SERVICE:INFO}
-    org.hibernate.SQL: ${LOGGING_LEVEL_HIBERNATE_SQL:WARN}
-    org.hibernate.type.descriptor.sql: ${LOGGING_LEVEL_HIBERNATE_TYPE:WARN}
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    root: INFO
+    com.MedicNote.prescriptionService: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
 
 jwt:
-  secret: ${JWT_SECRET:defaultvalue}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: mysupersecretkeymysupersecretkey123456
+  expiration: 86400000   # 1 day in ms
 
 management:
   endpoints:
@@ -81,6 +79,7 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 3
+
       patientService:
         register-health-indicator: true
         sliding-window-size: 10
@@ -88,3 +87,9 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 3
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

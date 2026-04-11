@@ -1,9 +1,25 @@
 server:
-  port: ${SERVER_PORT:8081}
+  port: 8081
 
 spring:
   application:
-    name: ${APP_NAME:AUTH-SERVICE}
+    name: AUTH-SERVICE
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/medicnote_auth
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
   cloud:
     openfeign:
       circuitbreaker:
@@ -11,26 +27,26 @@ spring:
 
 eureka:
   client:
-    enabled: ${EUREKA_ENABLED:true}
-    register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:true}
-    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: http://localhost:8761/eureka/
   instance:
-    hostname: ${EUREKA_HOSTNAME:localhost}
-    instance-id: ${spring.application.name}:${server.port}
+    hostname: localhost
+    instance-id: AUTH-SERVICE:8081
     prefer-ip-address: false
 
 logging:
   level:
-    root: ${LOGGING_LEVEL_ROOT:INFO}
-    com.MedicNote.authService: ${LOGGING_LEVEL_AUTH_SERVICE:INFO}
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    root: INFO
+    com.MedicNote.authService: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
 
 jwt:
-  secret: ${JWT_SECRET:defaultvalue}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: mysupersecretkeymysupersecretkey123456
+  expiration: 86400000   # 1 day in ms
 
 management:
   endpoints:
@@ -58,3 +74,9 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 3
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

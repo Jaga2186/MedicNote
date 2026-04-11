@@ -1,6 +1,6 @@
-package com.MedicNote.prescriptionService.config;
+package com.MedicNote.authService.config;
 
-import com.MedicNote.prescriptionService.security.JwtAuthenticationFilter;
+import com.MedicNote.authService.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +42,11 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+
+                                "/api/doctors/register",
+                                "/api/doctors/login",
+                                "/api/doctors/check-email/**",
+
                                 // ⭐ Swagger whitelist
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
