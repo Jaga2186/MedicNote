@@ -11,36 +11,22 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-
       routes:
-
-        # ============================================
-        # DOCTOR SERVICE ROUTES
-        # ============================================
-        - id: doctor-service
-          uri: lb://DOCTOR-SERVICE
-          predicates:
-            - Path=/api/doctors/**
-
-        # ============================================
-        # PATIENT SERVICE ROUTES
-        # ============================================
-        - id: patient-service
-          uri: lb://PATIENT-SERVICE
-          predicates:
-            - Path=/api/patients/**
-
-        # ============================================
-        # AUTH SERVICE ROUTES
-        # ============================================
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
             - Path=/api/auth/**
 
-        # ============================================
-        # PRESCRIPTION SERVICE ROUTES
-        # ============================================
+        - id: doctor-service
+          uri: lb://DOCTOR-SERVICE
+          predicates:
+            - Path=/api/doctors/**
+
+        - id: patient-service
+          uri: lb://PATIENT-SERVICE
+          predicates:
+            - Path=/api/patients/**
+
         - id: prescription-service
           uri: lb://PRESCRIPTION-SERVICE
           predicates:
@@ -51,6 +37,9 @@ spring:
 
   main:
     web-application-type: reactive
+
+jwt:
+  secret: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=  # same in ALL services
 
 eureka:
   client:
@@ -65,7 +54,7 @@ eureka:
 logging:
   level:
     root: INFO
-    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway: DEBUG
 
 management:
   endpoints:
