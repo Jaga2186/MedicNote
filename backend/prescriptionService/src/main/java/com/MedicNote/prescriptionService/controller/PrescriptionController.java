@@ -26,9 +26,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +42,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 @Validated
+@EnableMethodSecurity   // enables @PreAuthorize
 @Tag(name = "Prescription", description = "Prescription management APIs")
 public class PrescriptionController {
 
@@ -49,220 +52,78 @@ public class PrescriptionController {
     private final PrescriptionRepository prescriptionRepository;
     private final PatientServiceClient patientServiceClient;
 
-    @Operation(summary = "Create prescription", description = "Creates a new prescription (DOCTOR role only)")
+    // ============================================
+    // DOCTOR ONLY — Create prescription
+    // ============================================
+    @Operation(summary = "Create prescription (DOCTOR only)")
     @PostMapping
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<?> createPrescription(@Valid @RequestBody PrescriptionRequestDTO request) {
-
         log.info("Create prescription request for doctor={} patient={}", request.getDoctorId(), request.getPatientId());
-
         PrescriptionResponseDTO response = prescriptionService.createPrescription(request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                Map.of(
-                        "message", "Prescription created successfully",
-                        "data", response
-                )
-        );
+                Map.of("message", "Prescription created successfully", "data", response));
     }
 
-    @Operation(summary = "Get prescription by ID", description = "Retrieves a prescription by its unique ID")
-    @GetMapping("/{prescriptionId}")
-    public ResponseEntity<?> getPrescriptionById(
-            @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId) {
-
-        log.info("Fetching prescription by ID: {}", prescriptionId);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescription retrieved successfully",
-                        "data", prescriptionService.getPrescriptionById(prescriptionId)
-                )
-        );
-    }
-
-    @Operation(summary = "Get all prescriptions", description = "Retrieves a list of all prescriptions")
-    @GetMapping
-    public ResponseEntity<?> getAllPrescriptions() {
-
-        log.info("Fetching all prescriptions");
-
-        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getAllPrescriptions();
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescriptions fetched successfully",
-                        "count", prescriptions.size(),
-                        "data", prescriptions
-                )
-        );
-    }
-
-    @Operation(summary = "Get all prescriptions (paginated)", description = "Retrieves a paginated and sorted list of prescriptions")
-    @GetMapping("/page")
-    public ResponseEntity<?> getAllPrescriptionsPaginated(
-            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Sort field") @RequestParam(defaultValue = "prescriptionId") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)") @RequestParam(defaultValue = "desc") String direction) {
-
-        log.info("Fetching prescriptions paginated - page: {}, size: {}, sortBy: {}, direction: {}", page, size, sortBy, direction);
-
-        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<PrescriptionResponseDTO> prescriptions = prescriptionService.getAllPrescriptions(pageable);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescriptions fetched successfully",
-                        "data", prescriptions.getContent(),
-                        "currentPage", prescriptions.getNumber(),
-                        "totalItems", prescriptions.getTotalElements(),
-                        "totalPages", prescriptions.getTotalPages()
-                )
-        );
-    }
-
-    @Operation(summary = "Get prescriptions by doctor", description = "Retrieves all prescriptions for a specific doctor")
-    @GetMapping("/doctor/{doctorId}")
-    public ResponseEntity<?> getPrescriptionsByDoctorId(
-            @PathVariable @Positive(message = "Doctor ID must be positive") Long doctorId) {
-
-        log.info("Fetching prescriptions for doctor ID: {}", doctorId);
-
-        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getPrescriptionsByDoctorId(doctorId);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescriptions fetched successfully",
-                        "count", prescriptions.size(),
-                        "data", prescriptions
-                )
-        );
-    }
-
-    @Operation(summary = "Get prescriptions by patient", description = "Retrieves all prescriptions for a specific patient")
-    @GetMapping("/patient/{patientId}")
-    public ResponseEntity<?> getPrescriptionsByPatientId(
-            @PathVariable @Positive(message = "Patient ID must be positive") Long patientId) {
-
-        log.info("Fetching prescriptions for patient ID: {}", patientId);
-
-        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getPrescriptionsByPatientId(patientId);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescriptions fetched successfully",
-                        "count", prescriptions.size(),
-                        "data", prescriptions
-                )
-        );
-    }
-
-    @Operation(summary = "Get prescriptions by status", description = "Retrieves prescriptions filtered by status")
-    @GetMapping("/status/{status}")
-    public ResponseEntity<?> getPrescriptionsByStatus(@PathVariable PrescriptionStatus status) {
-
-        log.info("Fetching prescriptions with status: {}", status);
-
-        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getPrescriptionsByStatus(status);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescriptions fetched successfully",
-                        "count", prescriptions.size(),
-                        "data", prescriptions
-                )
-        );
-    }
-
-    @Operation(summary = "Update prescription", description = "Updates an existing prescription (DOCTOR role only)")
+    // ============================================
+    // DOCTOR ONLY — Update prescription
+    // ============================================
+    @Operation(summary = "Update prescription (DOCTOR only)")
     @PutMapping("/{prescriptionId}")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<?> updatePrescription(
             @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId,
             @Valid @RequestBody PrescriptionRequestDTO request) {
-
         log.info("Updating prescription ID: {}", prescriptionId);
-
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescription updated successfully",
-                        "data", prescriptionService.updatePrescription(prescriptionId, request)
-                )
-        );
+                Map.of("message", "Prescription updated successfully",
+                        "data", prescriptionService.updatePrescription(prescriptionId, request)));
     }
 
-    @Operation(summary = "Update prescription status", description = "Updates the status of a prescription (DOCTOR role only)")
+    // ============================================
+    // DOCTOR ONLY — Update status
+    // ============================================
+    @Operation(summary = "Update prescription status (DOCTOR only)")
     @PatchMapping("/{prescriptionId}/status")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<?> updatePrescriptionStatus(
             @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId,
             @RequestParam PrescriptionStatus status) {
-
         log.info("Updating prescription ID={} status to {}", prescriptionId, status);
-
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescription status updated successfully",
-                        "data", prescriptionService.updatePrescriptionStatus(prescriptionId, status)
-                )
-        );
+                Map.of("message", "Prescription status updated successfully",
+                        "data", prescriptionService.updatePrescriptionStatus(prescriptionId, status)));
     }
 
-    @Operation(summary = "Delete prescription", description = "Soft deletes a prescription (DOCTOR role only)")
+    // ============================================
+    // DOCTOR ONLY — Delete prescription
+    // ============================================
+    @Operation(summary = "Delete prescription (DOCTOR only)")
     @DeleteMapping("/{prescriptionId}")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<?> deletePrescription(
             @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId) {
-
         log.info("Deleting prescription ID: {}", prescriptionId);
-
         prescriptionService.deletePrescription(prescriptionId);
-
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescription deleted successfully",
-                        "prescriptionId", prescriptionId
-                )
-        );
+                Map.of("message", "Prescription deleted successfully", "prescriptionId", prescriptionId));
     }
 
     // ============================================
-    // DOWNLOAD PRESCRIPTION AS PDF
+    // DOCTOR ONLY — Email prescription to patient
     // ============================================
-    @Operation(summary = "Download prescription PDF", description = "Generates and downloads a PDF of the prescription")
-    @GetMapping("/{prescriptionId}/download")
-    public ResponseEntity<byte[]> downloadPrescriptionPdf(
-            @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId) {
-
-        log.info("Downloading PDF for prescription ID: {}", prescriptionId);
-
-        Prescription prescription = prescriptionRepository.findByPrescriptionIdAndIsActiveTrue(prescriptionId)
-                .orElseThrow(() -> new PrescriptionNotFoundException(prescriptionId));
-
-        byte[] pdfBytes = pdfService.generatePrescriptionPdf(prescription);
-
-        String fileName = "Prescription_" + prescriptionId + ".pdf";
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .contentLength(pdfBytes.length)
-                .body(pdfBytes);
-    }
-
-    // ============================================
-    // EMAIL PRESCRIPTION TO PATIENT
-    // ============================================
-    @Operation(summary = "Email prescription", description = "Sends the prescription as a PDF attachment via email")
+    @Operation(summary = "Email prescription (DOCTOR only)")
     @PostMapping("/{prescriptionId}/email")
+    @PreAuthorize("hasRole('DOCTOR')")
     @SuppressWarnings("unchecked")
     public ResponseEntity<?> emailPrescription(
             @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId) {
-
         log.info("Emailing prescription ID: {}", prescriptionId);
 
-        Prescription prescription = prescriptionRepository.findByPrescriptionIdAndIsActiveTrue(prescriptionId)
+        Prescription prescription = prescriptionRepository
+                .findByPrescriptionIdAndIsActiveTrue(prescriptionId)
                 .orElseThrow(() -> new PrescriptionNotFoundException(prescriptionId));
 
-        // Fetch patient email from PatientService
         String patientEmail;
         try {
             Map<String, Object> response = patientServiceClient.getPatientById(prescription.getPatientId());
@@ -276,10 +137,117 @@ public class PrescriptionController {
         emailService.sendPrescriptionEmail(prescription, patientEmail);
 
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Prescription emailed successfully to " + patientEmail,
-                        "prescriptionId", prescriptionId
-                )
-        );
+                Map.of("message", "Prescription emailed successfully to " + patientEmail,
+                        "prescriptionId", prescriptionId));
+    }
+
+    // ============================================
+    // DOCTOR + PATIENT — View prescriptions
+    // ============================================
+    @Operation(summary = "Get prescription by ID (DOCTOR and PATIENT)")
+    @GetMapping("/{prescriptionId}")
+    @PreAuthorize("hasRole('DOCTOR') or hasRole('PATIENT')")
+    public ResponseEntity<?> getPrescriptionById(
+            @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId) {
+        log.info("Fetching prescription by ID: {}", prescriptionId);
+        return ResponseEntity.ok(
+                Map.of("message", "Prescription retrieved successfully",
+                        "data", prescriptionService.getPrescriptionById(prescriptionId)));
+    }
+
+    @Operation(summary = "Get all prescriptions (DOCTOR and PATIENT)")
+    @GetMapping
+    @PreAuthorize("hasRole('DOCTOR') or hasRole('PATIENT')")
+    public ResponseEntity<?> getAllPrescriptions() {
+        log.info("Fetching all prescriptions");
+        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getAllPrescriptions();
+        return ResponseEntity.ok(
+                Map.of("message", "Prescriptions fetched successfully",
+                        "count", prescriptions.size(),
+                        "data", prescriptions));
+    }
+
+    @Operation(summary = "Get all prescriptions paginated (DOCTOR and PATIENT)")
+    @GetMapping("/page")
+    @PreAuthorize("hasRole('DOCTOR') or hasRole('PATIENT')")
+    public ResponseEntity<?> getAllPrescriptionsPaginated(
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort field") @RequestParam(defaultValue = "prescriptionId") String sortBy,
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "desc") String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<PrescriptionResponseDTO> prescriptions = prescriptionService.getAllPrescriptions(pageable);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Prescriptions fetched successfully",
+                "data", prescriptions.getContent(),
+                "currentPage", prescriptions.getNumber(),
+                "totalItems", prescriptions.getTotalElements(),
+                "totalPages", prescriptions.getTotalPages()));
+    }
+
+    @Operation(summary = "Get prescriptions by doctor (DOCTOR only)")
+    @GetMapping("/doctor/{doctorId}")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<?> getPrescriptionsByDoctorId(
+            @PathVariable @Positive(message = "Doctor ID must be positive") Long doctorId) {
+        log.info("Fetching prescriptions for doctor ID: {}", doctorId);
+        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getPrescriptionsByDoctorId(doctorId);
+        return ResponseEntity.ok(
+                Map.of("message", "Prescriptions fetched successfully",
+                        "count", prescriptions.size(),
+                        "data", prescriptions));
+    }
+
+    @Operation(summary = "Get prescriptions by patient (DOCTOR and PATIENT)")
+    @GetMapping("/patient/{patientId}")
+    @PreAuthorize("hasRole('DOCTOR') or hasRole('PATIENT')")
+    public ResponseEntity<?> getPrescriptionsByPatientId(
+            @PathVariable @Positive(message = "Patient ID must be positive") Long patientId) {
+        log.info("Fetching prescriptions for patient ID: {}", patientId);
+        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getPrescriptionsByPatientId(patientId);
+        return ResponseEntity.ok(
+                Map.of("message", "Prescriptions fetched successfully",
+                        "count", prescriptions.size(),
+                        "data", prescriptions));
+    }
+
+    @Operation(summary = "Get prescriptions by status (DOCTOR only)")
+    @GetMapping("/status/{status}")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<?> getPrescriptionsByStatus(@PathVariable PrescriptionStatus status) {
+        log.info("Fetching prescriptions with status: {}", status);
+        List<PrescriptionResponseDTO> prescriptions = prescriptionService.getPrescriptionsByStatus(status);
+        return ResponseEntity.ok(
+                Map.of("message", "Prescriptions fetched successfully",
+                        "count", prescriptions.size(),
+                        "data", prescriptions));
+    }
+
+    // ============================================
+    // DOCTOR + PATIENT — Download PDF
+    // ============================================
+    @Operation(summary = "Download prescription PDF (DOCTOR and PATIENT)")
+    @GetMapping("/{prescriptionId}/download")
+    @PreAuthorize("hasRole('DOCTOR') or hasRole('PATIENT')")
+    public ResponseEntity<byte[]> downloadPrescriptionPdf(
+            @PathVariable @Positive(message = "Prescription ID must be positive") Long prescriptionId) {
+        log.info("Downloading PDF for prescription ID: {}", prescriptionId);
+
+        Prescription prescription = prescriptionRepository
+                .findByPrescriptionIdAndIsActiveTrue(prescriptionId)
+                .orElseThrow(() -> new PrescriptionNotFoundException(prescriptionId));
+
+        byte[] pdfBytes = pdfService.generatePrescriptionPdf(prescription);
+        String fileName = "Prescription_" + prescriptionId + ".pdf";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdfBytes.length)
+                .body(pdfBytes);
     }
 }

@@ -54,11 +54,10 @@ logging:
     root: INFO
     com.MedicNote.prescriptionService: INFO
     org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql: WARN
 
 jwt:
-  secret: mysupersecretkeymysupersecretkey123456
-  expiration: 86400000   # 1 day in ms
+  secret: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=   # same in ALL services
+  expiration: 86400000
 
 management:
   endpoints:
@@ -79,7 +78,6 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 3
-
       patientService:
         register-health-indicator: true
         sliding-window-size: 10
