@@ -3,7 +3,6 @@ package com.MedicNote.patientService.controller;
 import com.MedicNote.patientService.dto.LoginRequestDTO;
 import com.MedicNote.patientService.dto.PatientResponseDTO;
 import com.MedicNote.patientService.dto.PatientRequestDTO;
-import com.MedicNote.patientService.security.JwtUtility;
 import com.MedicNote.patientService.service.PatientService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,148 +36,84 @@ import java.util.Map;
 public class PatientController {
 
     private final PatientService patientService;
-    private final JwtUtility jwtUtility;
+    // ✅ No JwtUtility here — token generation is Auth Service's responsibility
 
-    /**
-     * Register a new patient
-     */
-    @Operation(summary = "Register a new patient", description = "Creates a new patient account")
+    @Operation(summary = "Register a new patient")
     @PostMapping("/register")
     public ResponseEntity<?> registerPatient(@Valid @RequestBody PatientRequestDTO request) {
-
         log.info("Register patient request for email: {}", request.getPatientEmail());
-
         PatientResponseDTO response = patientService.registerPatient(request);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                Map.of(
-                        "message", "Patient registered successfully",
-                        "data", response
-                )
-        );
+                Map.of("message", "Patient registered successfully", "data", response));
     }
 
-    @Operation(summary = "Patient login", description = "Authenticate patient and return JWT token")
+    @Operation(summary = "Patient login — credential validation only, JWT issued by Auth Service")
     @PostMapping("/login")
     public ResponseEntity<?> loginPatient(@Valid @RequestBody LoginRequestDTO request) {
-
         log.info("Patient login attempt for email: {}", request.getEmail());
-
         PatientResponseDTO patient = patientService.loginPatient(
-                request.getEmail().trim().toLowerCase(),
-                request.getPassword()
-        );
-
-        String token = jwtUtility.generateToken(request.getEmail().trim().toLowerCase(), "PATIENT");
-
+                request.getEmail().trim().toLowerCase(), request.getPassword());
+        // ✅ Returns data only — Auth Service generates the token
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Login successful",
-                        "data", patient,
-                        "token", token
-                )
-        );
+                Map.of("message", "Login successful", "data", patient));
     }
 
-    /**
-     * Get patient by ID
-     */
-    @Operation(summary = "Get patient by ID", description = "Retrieves a patient by their unique ID")
+    @Operation(summary = "Get patient by ID")
     @GetMapping("/{patientId}")
     public ResponseEntity<?> getPatientById(
             @PathVariable @Positive(message = "Patient id must be positive") Long patientId) {
-
         log.info("Fetching patient by ID: {}", patientId);
-
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Patient retrieved successfully",
-                        "data", patientService.getPatientById(patientId)
-                )
-        );
+                Map.of("message", "Patient retrieved successfully", "data", patientService.getPatientById(patientId)));
     }
 
-    /**
-     * Get all patients
-     */
-    @Operation(summary = "Get all patients", description = "Retrieves a list of all active patients")
+    @Operation(summary = "Get all patients")
     @GetMapping
     public ResponseEntity<?> getAllPatients() {
-
         log.info("Fetching all patients");
-
         List<PatientResponseDTO> patients = patientService.getAllPatients();
-
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Patients fetched successfully",
-                        "count", patients.size(),
-                        "data", patients
-                )
-        );
+                Map.of("message", "Patients fetched successfully", "count", patients.size(), "data", patients));
     }
 
-    @Operation(summary = "Get all patients (paginated)", description = "Retrieves a paginated and sorted list of active patients")
+    @Operation(summary = "Get all patients (paginated)")
     @GetMapping("/page")
     public ResponseEntity<?> getAllPatientsPaginated(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort field") @RequestParam(defaultValue = "patientId") String sortBy,
-            @Parameter(description = "Sort direction (asc/desc)") @RequestParam(defaultValue = "asc") String direction) {
+            @Parameter(description = "Sort direction") @RequestParam(defaultValue = "asc") String direction) {
 
-        log.info("Fetching patients paginated - page: {}, size: {}, sortBy: {}, direction: {}", page, size, sortBy, direction);
-
-        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<PatientResponseDTO> patients = patientService.getAllPatients(pageable);
 
-        return ResponseEntity.ok(
-                Map.of(
-                        "message", "Patients fetched successfully",
-                        "data", patients.getContent(),
-                        "currentPage", patients.getNumber(),
-                        "totalItems", patients.getTotalElements(),
-                        "totalPages", patients.getTotalPages()
-                )
-        );
+        return ResponseEntity.ok(Map.of(
+                "message", "Patients fetched successfully",
+                "data", patients.getContent(),
+                "currentPage", patients.getNumber(),
+                "totalItems", patients.getTotalElements(),
+                "totalPages", patients.getTotalPages()));
     }
 
-    /**
-     * Update patient by ID
-     */
-    @Operation(summary = "Update patient", description = "Updates an existing patient's information")
+    @Operation(summary = "Update patient")
     @PutMapping("/{patientId}")
     public ResponseEntity<?> updatePatientById(
             @PathVariable @Positive(message = "Patient id must be positive") Long patientId,
             @Valid @RequestBody PatientRequestDTO request) {
-
         log.info("Updating patient ID: {}", patientId);
-
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Patient updated successfully",
-                        "data", patientService.updatePatient(patientId, request)
-                )
-        );
+                Map.of("message", "Patient updated successfully", "data", patientService.updatePatient(patientId, request)));
     }
 
-    /**
-     * Delete patient by ID
-     */
-    @Operation(summary = "Delete patient", description = "Soft deletes a patient by setting inactive")
+    @Operation(summary = "Delete patient")
     @DeleteMapping("/{patientId}")
     public ResponseEntity<?> deletePatientById(
             @PathVariable @Positive(message = "Patient id must be positive") Long patientId) {
-
         log.info("Deleting patient ID: {}", patientId);
-
         patientService.deletePatient(patientId);
-
         return ResponseEntity.ok(
-                Map.of(
-                        "message", "Patient deleted successfully",
-                        "patientId", patientId
-                )
-        );
+                Map.of("message", "Patient deleted successfully", "patientId", patientId));
     }
 }

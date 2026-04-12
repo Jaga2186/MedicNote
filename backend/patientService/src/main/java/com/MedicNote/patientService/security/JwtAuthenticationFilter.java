@@ -7,14 +7,15 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -26,24 +27,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtUtility = jwtUtility;
     }
 
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/api/patients/register",
+            "/api/patients/login",
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/swagger-resources",
+            "/webjars"
+    );
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String path = request.getServletPath();
 
-        if (path.contains("/swagger-ui") ||
-                path.contains("/v3/api-docs") ||
-                path.contains("/swagger-resources") ||
-                path.contains("/webjars")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (path.contains("/api/patients/register") ||
-                path.contains("/api/patients/login")) {
+        if (PUBLIC_PATHS.stream().anyMatch(path::startsWith)) {
+            log.info("Public path, skipping JWT check: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
@@ -55,26 +57,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        String token = authHeader.substring(7);
+        String email = null;
+
         try {
-            String jwt = authHeader.substring(7);
-            String email = jwtUtility.extractEmail(jwt);
-
-            if (email != null && jwtUtility.validateToken(jwt)
-                    && SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                email, null, Collections.emptyList());
-
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
-
+            email = jwtUtility.extractEmail(token);
         } catch (Exception e) {
-            log.error("JWT Authentication failed: {}", e.getMessage());
+            log.warn("Failed to extract email from JWT: {}", e.getMessage());
+        }
+
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (jwtUtility.validateToken(token, email)) {
+                String role = jwtUtility.extractRole(token);
+                List<SimpleGrantedAuthority> authorities = (role != null && !role.isBlank())
+                        ? List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                        : List.of();
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(email, null, authorities);
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("JWT auth successful for user: {} role: {}", email, role);
+            } else {
+                log.warn("JWT validation failed for user: {}", email);
+            }
         }
 
         filterChain.doFilter(request, response);
