@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -25,26 +26,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtility jwtUtility;
 
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/api/auth/doctor/register",
+            "/api/auth/doctor/login",
+            "/api/auth/patient/register",
+            "/api/auth/patient/login",
+            "/api/auth/validate",
+
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/swagger-resources",
+            "/webjars"
+    );
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String path = request.getServletPath();
 
-        // 🔓 Swagger bypass
-        if (path.contains("/swagger-ui") ||
-                path.contains("/v3/api-docs") ||
-                path.contains("/swagger-resources") ||
-                path.contains("/webjars")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // 🔓 Public auth APIs
-        if (path.contains("/auth/login") ||
-                path.contains("/auth/register")) {
+        if (PUBLIC_PATHS.stream().anyMatch(path::startsWith)) {
+            log.info("Public path, skipping JWT check: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
@@ -68,8 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 email, null, Collections.emptyList());
 
                 authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                        new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
