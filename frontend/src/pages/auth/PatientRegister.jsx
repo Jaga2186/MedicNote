@@ -6,14 +6,14 @@ import { registerPatient } from '../../api/services';
 
 const BLOOD_GROUPS = [
   { value: '', label: 'Select blood group' },
-  { value: 'A_POSITIVE', label: 'A+' },
-  { value: 'A_NEGATIVE', label: 'A-' },
-  { value: 'B_POSITIVE', label: 'B+' },
-  { value: 'B_NEGATIVE', label: 'B-' },
-  { value: 'O_POSITIVE', label: 'O+' },
-  { value: 'O_NEGATIVE', label: 'O-' },
-  { value: 'AB_POSITIVE', label: 'AB+' },
-  { value: 'AB_NEGATIVE', label: 'AB-' },
+  { value: 'A_POS', label: 'A+' },
+  { value: 'A_NEG', label: 'A-' },
+  { value: 'B_POS', label: 'B+' },
+  { value: 'B_NEG', label: 'B-' },
+  { value: 'O_POS', label: 'O+' },
+  { value: 'O_NEG', label: 'O-' },
+  { value: 'AB_POS', label: 'AB+' },
+  { value: 'AB_NEG', label: 'AB-' },
 ];
 
 const GENDERS = [
@@ -31,9 +31,9 @@ export default function PatientRegister() {
     patientPhone: '',
     dateOfBirth: '',
     gender: '',
-    address: { street: '', city: '', state: '', zipCode: '' },
-    emergencyContact: { contactName: '', contactPhone: '', relationship: '' },
-    medicalInfo: { bloodGroup: '', allergies: '', chronicConditions: '' },
+    address: { street: '', city: '', state: '', country: '', pinCode: '' },
+    emergencyContact: { name: '', phone: '', relation: '' },
+    medicalInfo: { bloodGroup: '', allergies: '', medicalHistory: '', currentMedications: '' },
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -168,8 +168,12 @@ export default function PatientRegister() {
                   <input id="state" type="text" required value={formData.address.state} onChange={(e) => handleNestedChange('address', 'state', e.target.value)} placeholder="NY" className={plainInputClass} />
                 </div>
                 <div>
-                  <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
-                  <input id="zipCode" type="text" required value={formData.address.zipCode} onChange={(e) => handleNestedChange('address', 'zipCode', e.target.value)} placeholder="10001" className={plainInputClass} />
+                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <input id="country" type="text" required value={formData.address.country} onChange={(e) => handleNestedChange('address', 'country', e.target.value)} placeholder="India" className={plainInputClass} />
+                </div>
+                <div>
+                  <label htmlFor="pinCode" className="block text-sm font-medium text-gray-700 mb-1">Pin Code</label>
+                  <input id="pinCode" type="text" required value={formData.address.pinCode} onChange={(e) => handleNestedChange('address', 'pinCode', e.target.value)} placeholder="600001" className={plainInputClass} />
                 </div>
               </div>
             </div>
@@ -183,15 +187,15 @@ export default function PatientRegister() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label htmlFor="contactName" className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
-                  <input id="contactName" type="text" required value={formData.emergencyContact.contactName} onChange={(e) => handleNestedChange('emergencyContact', 'contactName', e.target.value)} placeholder="John Doe" className={plainInputClass} />
+                  <input id="contactName" type="text" required value={formData.emergencyContact.name} onChange={(e) => handleNestedChange('emergencyContact', 'name', e.target.value)} placeholder="John Doe" className={plainInputClass} />
                 </div>
                 <div>
                   <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 mb-1">Contact Phone</label>
-                  <input id="contactPhone" type="text" required value={formData.emergencyContact.contactPhone} onChange={(e) => handleNestedChange('emergencyContact', 'contactPhone', e.target.value)} placeholder="+1 234 567 8900" className={plainInputClass} />
+                  <input id="contactPhone" type="text" required value={formData.emergencyContact.phone} onChange={(e) => handleNestedChange('emergencyContact', 'phone', e.target.value)} placeholder="+1 234 567 8900" className={plainInputClass} />
                 </div>
                 <div>
-                  <label htmlFor="relationship" className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
-                  <input id="relationship" type="text" required value={formData.emergencyContact.relationship} onChange={(e) => handleNestedChange('emergencyContact', 'relationship', e.target.value)} placeholder="Spouse, Parent, etc." className={plainInputClass} />
+                  <label htmlFor="relation" className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                  <input id="relation" type="text" required value={formData.emergencyContact.relation} onChange={(e) => handleNestedChange('emergencyContact', 'relation', e.target.value)} placeholder="Spouse, Parent, etc." className={plainInputClass} />
                 </div>
               </div>
             </div>
@@ -218,8 +222,12 @@ export default function PatientRegister() {
                   <input id="allergies" type="text" value={formData.medicalInfo.allergies} onChange={(e) => handleNestedChange('medicalInfo', 'allergies', e.target.value)} placeholder="e.g. Penicillin, Peanuts (or leave blank)" className={plainInputClass} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label htmlFor="chronicConditions" className="block text-sm font-medium text-gray-700 mb-1">Chronic Conditions</label>
-                  <input id="chronicConditions" type="text" value={formData.medicalInfo.chronicConditions} onChange={(e) => handleNestedChange('medicalInfo', 'chronicConditions', e.target.value)} placeholder="e.g. Diabetes, Hypertension (or leave blank)" className={plainInputClass} />
+                  <label htmlFor="medicalHistory" className="block text-sm font-medium text-gray-700 mb-1">Medical History</label>
+                  <input id="medicalHistory" type="text" value={formData.medicalInfo.medicalHistory} onChange={(e) => handleNestedChange('medicalInfo', 'medicalHistory', e.target.value)} placeholder="e.g. Diabetes, Hypertension (or leave blank)" className={plainInputClass} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label htmlFor="currentMedications" className="block text-sm font-medium text-gray-700 mb-1">Current Medications</label>
+                  <input id="currentMedications" type="text" value={formData.medicalInfo.currentMedications} onChange={(e) => handleNestedChange('medicalInfo', 'currentMedications', e.target.value)} placeholder="e.g. Aspirin, Metformin (or leave blank)" className={plainInputClass} />
                 </div>
               </div>
             </div>

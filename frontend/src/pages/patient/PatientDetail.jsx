@@ -62,17 +62,19 @@ export default function PatientDetail() {
       street: p.address?.street || '',
       city: p.address?.city || '',
       state: p.address?.state || '',
-      zipCode: p.address?.zipCode || '',
+      country: p.address?.country || '',
+      pinCode: p.address?.pinCode || '',
     },
     emergencyContact: {
-      contactName: p.emergencyContact?.contactName || '',
-      contactPhone: p.emergencyContact?.contactPhone || '',
-      relationship: p.emergencyContact?.relationship || '',
+      name: p.emergencyContact?.name || '',
+      phone: p.emergencyContact?.phone || '',
+      relation: p.emergencyContact?.relation || '',
     },
     medicalInfo: {
       bloodGroup: p.medicalInfo?.bloodGroup || '',
       allergies: p.medicalInfo?.allergies || '',
-      chronicConditions: p.medicalInfo?.chronicConditions || '',
+      medicalHistory: p.medicalInfo?.medicalHistory || '',
+      currentMedications: p.medicalInfo?.currentMedications || '',
     },
   });
 
@@ -333,7 +335,8 @@ export default function PatientDetail() {
             {renderField('Street', patient.address?.street, 'address', 'street')}
             {renderField('City', patient.address?.city, 'address', 'city')}
             {renderField('State', patient.address?.state, 'address', 'state')}
-            {renderField('Zip Code', patient.address?.zipCode, 'address', 'zipCode')}
+            {renderField('Country', patient.address?.country, 'address', 'country')}
+            {renderField('Pin Code', patient.address?.pinCode, 'address', 'pinCode')}
           </div>
         </div>
 
@@ -346,9 +349,9 @@ export default function PatientDetail() {
             <h2 className="text-lg font-semibold text-gray-900">Emergency Contact</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {renderField('Contact Name', patient.emergencyContact?.contactName, 'emergencyContact', 'contactName')}
-            {renderField('Contact Phone', patient.emergencyContact?.contactPhone, 'emergencyContact', 'contactPhone', 'tel')}
-            {renderField('Relationship', patient.emergencyContact?.relationship, 'emergencyContact', 'relationship')}
+            {renderField('Contact Name', patient.emergencyContact?.name, 'emergencyContact', 'name')}
+            {renderField('Contact Phone', patient.emergencyContact?.phone, 'emergencyContact', 'phone', 'tel')}
+            {renderField('Relationship', patient.emergencyContact?.relation, 'emergencyContact', 'relation')}
           </div>
         </div>
 
@@ -367,10 +370,11 @@ export default function PatientDetail() {
               'medicalInfo',
               'bloodGroup',
               'text',
-              ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+              ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG']
             )}
             {renderField('Allergies', patient.medicalInfo?.allergies, 'medicalInfo', 'allergies')}
-            {renderField('Chronic Conditions', patient.medicalInfo?.chronicConditions, 'medicalInfo', 'chronicConditions')}
+            {renderField('Medical History', patient.medicalInfo?.medicalHistory, 'medicalInfo', 'medicalHistory')}
+            {renderField('Current Medications', patient.medicalInfo?.currentMedications, 'medicalInfo', 'currentMedications')}
           </div>
         </div>
       </div>

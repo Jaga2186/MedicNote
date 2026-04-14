@@ -57,7 +57,7 @@ export default function PrescriptionList() {
       setLoading(true);
       try {
         const res = await getPrescriptionsPaginated(page, pageSize, 'prescriptionId', 'desc');
-        const payload = res.data.data || res.data;
+        const payload = res.data;
         setPrescriptions(payload.data || []);
         setCurrentPage(payload.currentPage ?? page);
         setTotalPages(payload.totalPages ?? 1);

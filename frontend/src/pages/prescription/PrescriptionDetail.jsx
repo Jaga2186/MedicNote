@@ -322,7 +322,7 @@ export default function PrescriptionDetail() {
                 {rx.medications.map((med, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 text-gray-500">{index + 1}</td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{med.medicationName || '—'}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{med.medicineName || '—'}</td>
                     <td className="px-6 py-4 text-gray-700">{med.dosage || '—'}</td>
                     <td className="px-6 py-4 text-gray-700">{med.frequency || '—'}</td>
                     <td className="px-6 py-4 text-gray-700">{med.duration || '—'}</td>

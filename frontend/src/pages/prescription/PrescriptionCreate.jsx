@@ -6,7 +6,7 @@ import { createPrescription, getPatients } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
 
 const emptyMedication = () => ({
-  medicationName: '',
+  medicineName: '',
   dosage: '',
   frequency: '',
   duration: '',
@@ -86,7 +86,7 @@ export default function PrescriptionCreate() {
       toast.error('Please enter a diagnosis');
       return;
     }
-    const hasEmptyMed = formData.medications.some((m) => !m.medicationName.trim());
+    const hasEmptyMed = formData.medications.some((m) => !m.medicineName.trim());
     if (hasEmptyMed) {
       toast.error('Please fill in the medication name for all entries');
       return;
@@ -100,7 +100,7 @@ export default function PrescriptionCreate() {
         diagnosis: formData.diagnosis.trim(),
         notes: formData.notes.trim(),
         medications: formData.medications.map((m) => ({
-          medicationName: m.medicationName.trim(),
+          medicineName: m.medicineName.trim(),
           dosage: m.dosage.trim(),
           frequency: m.frequency.trim(),
           duration: m.duration.trim(),
@@ -254,8 +254,8 @@ export default function PrescriptionCreate() {
                   </label>
                   <input
                     type="text"
-                    name="medicationName"
-                    value={med.medicationName}
+                    name="medicineName"
+                    value={med.medicineName}
                     onChange={(e) => handleMedicationChange(index, e)}
                     required
                     placeholder="e.g. Amoxicillin"

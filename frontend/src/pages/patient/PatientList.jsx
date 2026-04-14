@@ -20,7 +20,7 @@ export default function PatientList() {
     setLoading(true);
     try {
       const res = await getPatientsPaginated(page, pageSize, 'patientId', 'asc');
-      const { data, currentPage: cp, totalPages: tp, totalItems: ti } = res.data.data;
+      const { data, currentPage: cp, totalPages: tp, totalItems: ti } = res.data;
       setPatients(data);
       setCurrentPage(cp);
       setTotalPages(tp);
