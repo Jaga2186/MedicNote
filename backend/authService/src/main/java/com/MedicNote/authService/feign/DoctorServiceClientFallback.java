@@ -1,5 +1,7 @@
 package com.MedicNote.authService.feign;
 
+import com.MedicNote.authService.dto.DoctorRegisterRequestDTO;
+
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -18,7 +20,7 @@ public class DoctorServiceClientFallback implements FallbackFactory<DoctorServic
         return new DoctorServiceClient() {
 
             @Override
-            public Map<String, Object> registerDoctor(Map<String, Object> request) {
+            public Map<String, Object> registerDoctor(DoctorRegisterRequestDTO request) {
                 throw buildException("Doctor Service", cause);
             }
 

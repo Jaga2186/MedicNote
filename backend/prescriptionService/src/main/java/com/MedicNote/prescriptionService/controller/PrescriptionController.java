@@ -4,6 +4,7 @@ import com.MedicNote.prescriptionService.dto.PrescriptionRequestDTO;
 import com.MedicNote.prescriptionService.dto.PrescriptionResponseDTO;
 import com.MedicNote.prescriptionService.entity.Prescription;
 import com.MedicNote.prescriptionService.entity.PrescriptionStatus;
+import com.MedicNote.prescriptionService.exception.BadRequestException;
 import com.MedicNote.prescriptionService.exception.PrescriptionNotFoundException;
 import com.MedicNote.prescriptionService.exception.ServiceUnavailableException;
 import com.MedicNote.prescriptionService.feign.PatientServiceClient;
@@ -132,6 +133,10 @@ public class PrescriptionController {
         } catch (Exception e) {
             log.error("Failed to fetch patient email: {}", e.getMessage());
             throw new ServiceUnavailableException("Could not fetch patient email from Patient Service");
+        }
+
+        if (patientEmail == null || patientEmail.isBlank()) {
+            throw new BadRequestException("Patient does not have an email address on file");
         }
 
         emailService.sendPrescriptionEmail(prescription, patientEmail);

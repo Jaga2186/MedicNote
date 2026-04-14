@@ -43,7 +43,9 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+      EUREKA_INSTANCE_HOSTNAME: doctor-service
+      EUREKA_PREFER_IP_ADDRESS: "true"
+      JWT_SECRET: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=
     depends_on:
       mysql:
         condition: service_healthy
@@ -62,7 +64,9 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+      EUREKA_INSTANCE_HOSTNAME: patient-service
+      EUREKA_PREFER_IP_ADDRESS: "true"
+      JWT_SECRET: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=
     depends_on:
       mysql:
         condition: service_healthy
@@ -78,7 +82,9 @@ services:
       - "8081:8081"
     environment:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+      EUREKA_INSTANCE_HOSTNAME: auth-service
+      EUREKA_PREFER_IP_ADDRESS: "true"
+      JWT_SECRET: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -99,11 +105,13 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      JWT_SECRET: MedicNoteSecretKey2024SuperSecureTokenForJWT
+      EUREKA_INSTANCE_HOSTNAME: prescription-service
+      EUREKA_PREFER_IP_ADDRESS: "true"
+      JWT_SECRET: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=
       MAIL_HOST: smtp.gmail.com
       MAIL_PORT: 587
-      MAIL_USERNAME: your-email@gmail.com
-      MAIL_PASSWORD: your-app-password
+      MAIL_USERNAME: ${MAIL_USERNAME:-medicnote@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-changeme}
     depends_on:
       mysql:
         condition: service_healthy
@@ -123,6 +131,9 @@ services:
       - "8080:8080"
     environment:
       EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_HOSTNAME: api-gateway
+      EUREKA_PREFER_IP_ADDRESS: "true"
+      JWT_SECRET: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=
     depends_on:
       eureka-server:
         condition: service_healthy

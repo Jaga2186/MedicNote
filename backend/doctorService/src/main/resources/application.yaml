@@ -6,9 +6,9 @@ spring:
     name: DOCTOR-SERVICE
 
   datasource:
-    url: jdbc:mysql://localhost:3306/medicnote_doctor
-    username: root
-    password: root
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/medicnote_doctor?createDatabaseIfNotExist=true}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -26,11 +26,11 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://localhost:8761/eureka/}
   instance:
-    hostname: localhost
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
     instance-id: DOCTOR-SERVICE:8082
-    prefer-ip-address: false
+    prefer-ip-address: ${EUREKA_PREFER_IP_ADDRESS:false}
 
 logging:
   level:
@@ -39,8 +39,8 @@ logging:
     org.hibernate.SQL: WARN
 
 jwt:
-  secret: k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=   # same in ALL services
-  expiration: 86400000
+  secret: ${JWT_SECRET:k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 management:
   endpoints:

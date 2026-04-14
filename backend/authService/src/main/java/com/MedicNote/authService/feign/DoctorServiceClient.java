@@ -1,5 +1,7 @@
 package com.MedicNote.authService.feign;
 
+import com.MedicNote.authService.dto.DoctorRegisterRequestDTO;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,7 +14,7 @@ import java.util.Map;
 public interface DoctorServiceClient {
 
     @PostMapping("/api/doctors/register")
-    Map<String, Object> registerDoctor(@RequestBody Map<String, Object> request);
+    Map<String, Object> registerDoctor(@RequestBody DoctorRegisterRequestDTO request);
 
     @PostMapping("/api/doctors/login")
     Map<String, Object> loginDoctor(@RequestBody Map<String, Object> request);

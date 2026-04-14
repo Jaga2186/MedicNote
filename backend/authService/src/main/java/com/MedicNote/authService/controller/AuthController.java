@@ -1,7 +1,9 @@
 package com.MedicNote.authService.controller;
 
 import com.MedicNote.authService.dto.AuthResponseDTO;
+import com.MedicNote.authService.dto.DoctorRegisterRequestDTO;
 import com.MedicNote.authService.dto.LoginRequestDTO;
+import com.MedicNote.authService.dto.PatientRegisterRequestDTO;
 import com.MedicNote.authService.feign.DoctorServiceClient;
 import com.MedicNote.authService.feign.PatientServiceClient;
 import com.MedicNote.authService.security.JwtUtility;
@@ -35,7 +37,7 @@ public class AuthController {
     // ============ DOCTOR REGISTER ============
     @Operation(summary = "Register a new doctor")
     @PostMapping("/doctor/register")
-    public ResponseEntity<?> registerDoctor(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> registerDoctor(@RequestBody DoctorRegisterRequestDTO request) {
         log.info("Auth: Doctor registration request");
         Map<String, Object> response = doctorServiceClient.registerDoctor(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -72,7 +74,7 @@ public class AuthController {
     // ============ PATIENT REGISTER ============
     @Operation(summary = "Register a new patient")
     @PostMapping("/patient/register")
-    public ResponseEntity<?> registerPatient(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<?> registerPatient(@Valid @RequestBody PatientRegisterRequestDTO request) {
         log.info("Auth: Patient registration request");
         Map<String, Object> response = patientServiceClient.registerPatient(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
