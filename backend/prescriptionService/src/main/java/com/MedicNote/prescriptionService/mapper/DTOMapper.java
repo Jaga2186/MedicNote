@@ -18,7 +18,7 @@ public interface DTOMapper {
     @Mapping(target = "doctorName", ignore = true)
     @Mapping(target = "patientName", ignore = true)
     @Mapping(target = "status", ignore = true)
-    @Mapping(target = "isActive", constant = "true")
+    @Mapping(target = "isActive", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "medications", ignore = true)
