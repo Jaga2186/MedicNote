@@ -4,6 +4,11 @@ target/
 .devin/
 *.log
 .env
+.settings/
+.classpath
+.project
+.factorypath
+*.iml
 
 # Frontend
 node_modules/
