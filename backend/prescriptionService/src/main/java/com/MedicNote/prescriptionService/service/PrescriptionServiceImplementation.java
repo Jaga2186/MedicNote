@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +62,10 @@ public class PrescriptionServiceImplementation implements PrescriptionService {
         prescription.setPatientName(patientName);
         prescription.setStatus(PrescriptionStatus.ACTIVE);
         prescription.setIsActive(true);
+
+        if(prescription.getMedications() == null) {
+            prescription.setMedications(new ArrayList<>());
+        }
 
         // Map and add medications
         if (dto.getMedications() != null) {
@@ -197,6 +202,10 @@ public class PrescriptionServiceImplementation implements PrescriptionService {
 
         prescription.setDiagnosis(dto.getDiagnosis());
         prescription.setNotes(dto.getNotes());
+
+        if(prescription.getMedications() == null) {
+            prescription.setMedications(new ArrayList<>());
+        }
 
         // Update medications
         prescription.clearMedications();
