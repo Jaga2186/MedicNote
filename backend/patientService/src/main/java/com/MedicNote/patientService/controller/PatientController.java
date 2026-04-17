@@ -36,8 +36,8 @@ import java.util.Map;
 public class PatientController {
 
     private final PatientService patientService;
-    // ✅ No JwtUtility here — token generation is Auth Service's responsibility
 
+    // No JwtUtility here — token generation is Auth Service's responsibility
     @Operation(summary = "Register a new patient")
     @PostMapping("/register")
     public ResponseEntity<?> registerPatient(@Valid @RequestBody PatientRequestDTO request) {
@@ -50,10 +50,9 @@ public class PatientController {
     @Operation(summary = "Patient login — credential validation only, JWT issued by Auth Service")
     @PostMapping("/login")
     public ResponseEntity<?> loginPatient(@Valid @RequestBody LoginRequestDTO request) {
-        log.info("Patient login attempt for email: {}", request.getEmail());
-        PatientResponseDTO patient = patientService.loginPatient(
-                request.getEmail().trim().toLowerCase(), request.getPassword());
-        // ✅ Returns data only — Auth Service generates the token
+        log.info("Patient login attempt for identifier: {}", request.getIdentifier());
+        PatientResponseDTO patient = patientService.loginPatient(request.getIdentifier(), request.getPassword());
+        // Returns data only — Auth Service generates the token
         return ResponseEntity.ok(
                 Map.of("message", "Login successful", "data", patient));
     }
@@ -115,5 +114,23 @@ public class PatientController {
         patientService.deletePatient(patientId);
         return ResponseEntity.ok(
                 Map.of("message", "Patient deleted successfully", "patientId", patientId));
+    }
+
+    @Operation(summary = "Get patient by email")
+    @GetMapping("/by-email/{email}")
+    public ResponseEntity<?> getPatientByEmail(@PathVariable String email) {
+        log.info("Fetching patient by email: {}", email);
+        return ResponseEntity.ok(
+                Map.of("message", "Patient retrieved successfully",
+                        "data", patientService.getPatientByEmail(email)));
+    }
+
+    @Operation(summary = "Get patient by phone")
+    @GetMapping("/by-phone/{phone}")
+    public ResponseEntity<?> getPatientByPhone(@PathVariable String phone) {
+        log.info("Fetching patient by phone: {}", phone);
+        return ResponseEntity.ok(
+                Map.of("message", "Patient retrieved successfully",
+                        "data", patientService.getPatientByPhone(phone)));
     }
 }

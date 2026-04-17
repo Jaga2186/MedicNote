@@ -67,23 +67,35 @@ public class PatientServiceImplementation implements PatientService {
     // =========================================================
     @Override
     @Transactional(readOnly = true)
-    public PatientResponseDTO loginPatient(String email, String password) {
+    public PatientResponseDTO loginPatient(String identifier, String password) {
 
-        String normalizedEmail = normalizeEmail(email);
+        if (identifier == null || identifier.isBlank())
+            throw new BadRequestException("Email or phone cannot be blank");
 
         if (password == null || password.isBlank())
             throw new BadRequestException("Password cannot be blank");
 
-        log.info("Patient login attempt: {}", normalizedEmail);
+        String trimmed = identifier.trim();
+        log.info("Patient Login attempt with identifier: {}", trimmed);
 
-        Patient patient = patientRepository.findByPatientEmail(normalizedEmail)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        // Detect if identifier is email or phone
+        boolean isEmail = trimmed.contains("@");
+        log.info("Identifier type: {}", isEmail ? "EMAIL" : "PHONE");
+
+        Patient patient;
+        if (isEmail) {
+            patient = patientRepository.findByPatientEmail(trimmed.toLowerCase())
+                    .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        } else {
+            patient = patientRepository.findByPatientPhone(trimmed)
+                    .orElseThrow(() -> new InvalidCredentialsException("Invalid phone or password"));
+        }
 
         if (!patient.getIsActive())
             throw new InvalidCredentialsException("Account is inactive");
 
         if (!passwordEncoder.matches(password, patient.getPatientPassword()))
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid Credentials");
 
         log.info("Patient login success. ID={}", patient.getPatientId());
         return mapper.entityToResponseDTO(patient);
@@ -196,6 +208,28 @@ public class PatientServiceImplementation implements PatientService {
         patientRepository.save(patient);
 
         log.warn("Patient SOFT DELETED (deactivated). ID={}", patientId);
+    }
+
+    // =========================================================
+    // OTP TO PATIENT EMAIL
+    // =========================================================
+    @Override
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getPatientByEmail(String email) {
+        Patient patient = patientRepository.findByPatientEmail(normalizeEmail(email))
+                .orElseThrow(() -> new PatientNotFoundException("No doctor found with email: " + email));
+        return mapper.entityToResponseDTO(patient);
+    }
+
+    // =========================================================
+    // OTP TO PATIENT PHONE
+    // =========================================================
+    @Override
+    @Transactional(readOnly = true)
+    public PatientResponseDTO getPatientByPhone(String phone) {
+        Patient patient = patientRepository.findByPatientPhone(phone.trim())
+                .orElseThrow(() -> new PatientNotFoundException("No doctor found with phone: " + phone));
+        return mapper.entityToResponseDTO(patient);
     }
 
     // =========================================================
