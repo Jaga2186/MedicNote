@@ -51,10 +51,9 @@ public class DoctorController {
     @Operation(summary = "Doctor login — credential validation only, JWT issued by Auth Service")
     @PostMapping("/login")
     public ResponseEntity<?> loginDoctor(@Valid @RequestBody LoginRequestDTO request) {
-        log.info("Doctor login attempt for email: {}", request.getEmail());
-        DoctorResponseDTO doctor = doctorService.loginDoctor(
-                request.getEmail().trim().toLowerCase(), request.getPassword());
-        // ✅ Returns data only — Auth Service generates the token
+        log.info("Doctor login attempt for email: {}", request.getIdentifier());
+        DoctorResponseDTO doctor = doctorService.loginDoctor(request.getIdentifier(), request.getPassword());
+        // Returns data only — Auth Service generates the token
         return ResponseEntity.ok(
                 Map.of("message", "Login successful", "data", doctor));
     }
@@ -134,5 +133,24 @@ public class DoctorController {
             @PathVariable @NotBlank(message = "Email is required") String email) {
         log.info("Checking doctor by email: {}", email);
         return ResponseEntity.ok(Map.of("exists", doctorService.checkByDoctorEmail(email)));
+    }
+
+
+    @Operation(summary = "Get doctor by email")
+    @GetMapping("/by-email/{email}")
+    public ResponseEntity<?> getDoctorByEmail(@PathVariable String email) {
+        log.info("Fetching doctor by email: {}", email);
+        return ResponseEntity.ok(
+                Map.of("message", "Doctor retrieved successfully",
+                        "data", doctorService.getDoctorByEmail(email)));
+    }
+
+    @Operation(summary = "Get doctor by phone")
+    @GetMapping("/by-phone/{phone}")
+    public ResponseEntity<?> getDoctorByPhone(@PathVariable String phone) {
+        log.info("Fetching doctor by phone: {}", phone);
+        return ResponseEntity.ok(
+                Map.of("message", "Doctor retrieved successfully",
+                        "data", doctorService.getDoctorByPhone(phone)));
     }
 }

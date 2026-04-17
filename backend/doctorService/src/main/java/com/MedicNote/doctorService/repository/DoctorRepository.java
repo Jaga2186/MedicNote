@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.List;
 
 public interface DoctorRepository extends JpaRepository<Doctor, Long> {
+    Optional<Doctor> findByDoctorPhone(String phone);
     Optional<Doctor> findByDoctorEmail(String email);
     Boolean existsByDoctorEmail(String email);
     List<Doctor> findBySpecializationIgnoreCase(String specialization);

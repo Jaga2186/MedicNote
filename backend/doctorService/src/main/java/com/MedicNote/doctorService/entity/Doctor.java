@@ -21,7 +21,8 @@ import java.time.LocalDateTime;
         name = "doctors",
         indexes = {
                 @Index(name = "idx_doctor_email", columnList = "doctor_email"),
-                @Index(name = "idx_license_number", columnList = "license_number")
+                @Index(name = "idx_license_number", columnList = "license_number"),
+                @Index(name = "idx_doctor_phone", columnList = "doctor_phone")
         }
 )
 public class Doctor {

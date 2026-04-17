@@ -12,7 +12,7 @@ public interface DoctorService {
 
     DoctorResponseDTO registerDoctor(DoctorRequestDTO doctorRequestDTO);
 
-    DoctorResponseDTO loginDoctor(String email, String password);
+    DoctorResponseDTO loginDoctor(String identifier, String password);
 
     List<DoctorResponseDTO> getAllDoctors();
 
@@ -27,4 +27,8 @@ public interface DoctorService {
     void deleteDoctorById(Long doctorId);
 
     Boolean checkByDoctorEmail(String email);
+
+    DoctorResponseDTO getDoctorByEmail(String email);
+
+    DoctorResponseDTO getDoctorByPhone(String phone);
 }

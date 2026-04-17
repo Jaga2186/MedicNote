@@ -72,23 +72,35 @@ public class DoctorServiceImplementation implements DoctorService {
     // =========================================================
     @Override
     @Transactional(readOnly = true)
-    public DoctorResponseDTO loginDoctor(String email, String password) {
+    public DoctorResponseDTO loginDoctor(String identifier, String password) {
 
-        String normalizedEmail = normalizeEmail(email);
+        if (identifier == null || identifier.isBlank())
+            throw new BadRequestException("Email or phone cannot be blank");
 
         if (password == null || password.isBlank())
             throw new BadRequestException("Password cannot be blank");
 
-        log.info("Doctor login attempt: {}", normalizedEmail);
+        String trimmed = identifier.trim();
+        log.info("Doctor Login attempt with identifier: {}", trimmed);
 
-        Doctor doctor = doctorRepository.findByDoctorEmail(normalizedEmail)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        // Detect if identifier is email or phone
+        boolean isEmail = trimmed.contains("@");
+        log.info("Identifier type: {}", isEmail ? "EMAIL" : "PHONE");
+
+        Doctor doctor;
+        if(isEmail) {
+            doctor = doctorRepository.findByDoctorEmail(trimmed.toLowerCase())
+                    .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        } else {
+            doctor = doctorRepository.findByDoctorPhone(trimmed)
+                    .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
+        }
 
         if (!doctor.getIsActive())
             throw new InvalidCredentialsException("Account is inactive");
 
         if (!passwordEncoder.matches(password, doctor.getDoctorPassword()))
-            throw new InvalidCredentialsException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid Credentials");
 
         log.info("Doctor login success. ID={}", doctor.getDoctorId());
         return mapper.entityToResponseDTO(doctor);
@@ -213,6 +225,28 @@ public class DoctorServiceImplementation implements DoctorService {
     @Override
     public Boolean checkByDoctorEmail(String email) {
         return doctorRepository.existsByDoctorEmail(normalizeEmail(email));
+    }
+
+    // =========================================================
+    // OTP TO DOCTOR EMAIL
+    // =========================================================
+    @Override
+    @Transactional(readOnly = true)
+    public DoctorResponseDTO getDoctorByEmail(String email) {
+        Doctor doctor = doctorRepository.findByDoctorEmail(normalizeEmail(email))
+                .orElseThrow(() -> new DoctorNotFoundException("No doctor found with email: " + email));
+        return mapper.entityToResponseDTO(doctor);
+    }
+
+    // =========================================================
+    // OTP TO DOCTOR PHONE
+    // =========================================================
+    @Override
+    @Transactional(readOnly = true)
+    public DoctorResponseDTO getDoctorByPhone(String phone) {
+        Doctor doctor = doctorRepository.findByDoctorPhone(phone.trim())
+                .orElseThrow(() -> new DoctorNotFoundException("No doctor found with phone: " + phone));
+        return mapper.entityToResponseDTO(doctor);
     }
 
     // =========================================================
