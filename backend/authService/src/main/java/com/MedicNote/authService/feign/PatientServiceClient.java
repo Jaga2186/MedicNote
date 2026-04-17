@@ -8,7 +8,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(name = "PATIENT-SERVICE", fallbackFactory = PatientServiceClientFallback.class)
+@FeignClient(
+        name = "PATIENT-SERVICE",
+        configuration = com.MedicNote.authService.config.FeignConfig.class,
+        fallbackFactory = PatientServiceClientFallback.class
+)
 public interface PatientServiceClient {
 
     @PostMapping("/api/patients/register")
