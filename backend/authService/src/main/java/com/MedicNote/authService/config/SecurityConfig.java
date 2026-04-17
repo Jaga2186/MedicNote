@@ -45,6 +45,9 @@ public class SecurityConfig {
                                 "/api/auth/patient/login",
                                 "/api/auth/validate",
 
+                                "/api/auth/otp/send",
+                                "/api/auth/otp/verify",
+
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",

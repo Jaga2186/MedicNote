@@ -5,6 +5,32 @@ spring:
   application:
     name: AUTH-SERVICE
 
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/medicnote_auth?createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:jagadhesh.85131@gmail.com}
+    password: ${MAIL_PASSWORD:hnod tpdh stxd mqhs}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   cloud:
     openfeign:
       circuitbreaker:
@@ -35,6 +61,9 @@ logging:
 jwt:
   secret: ${JWT_SECRET:k2x7ieCfxLcw5us4+mP+7tspXHhVfGn+kzVVheSrsT0=}
   expiration: ${JWT_EXPIRATION:86400000}
+
+otp:
+  expiry-minutes: 5
 
 management:
   endpoints:

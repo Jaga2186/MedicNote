@@ -47,29 +47,31 @@ public class AuthController {
     @Operation(summary = "Doctor login — validates via Doctor Service, issues JWT here")
     @PostMapping("/doctor/login")
     public ResponseEntity<?> loginDoctor(@Valid @RequestBody LoginRequestDTO request) {
-        log.info("Auth: Doctor login attempt for email: {}", request.getEmail());
+        log.info("Auth: Doctor login attempt for identifier: {}", request.getIdentifier());
 
         Map<String, Object> loginRequest = Map.of(
-                "email", request.getEmail(),
+                "identifier", request.getIdentifier(),
                 "password", request.getPassword()
         );
 
-        // Doctor Service validates credentials and returns doctor data
         Map<String, Object> response = doctorServiceClient.loginDoctor(loginRequest);
 
-        // Auth Service is the ONLY place that issues JWT tokens
-        String token = jwtUtility.generateToken(
-                request.getEmail().trim().toLowerCase(), "DOCTOR");
+        // Extract email from Doctor Service response for JWT generation
+        Map<String, Object> doctorData = (Map<String, Object>) response.get("data");
+        String email = (String) doctorData.get("doctorEmail");
+
+        String token = jwtUtility.generateToken(email.trim().toLowerCase(), "DOCTOR");
 
         return ResponseEntity.ok(
                 AuthResponseDTO.builder()
                         .message("Doctor login successful")
                         .token(token)
                         .role("DOCTOR")
-                        .data(response.get("data"))
+                        .data(doctorData)
                         .build()
         );
     }
+
 
     // ============ PATIENT REGISTER ============
     @Operation(summary = "Register a new patient")
@@ -84,26 +86,27 @@ public class AuthController {
     @Operation(summary = "Patient login — validates via Patient Service, issues JWT here")
     @PostMapping("/patient/login")
     public ResponseEntity<?> loginPatient(@Valid @RequestBody LoginRequestDTO request) {
-        log.info("Auth: Patient login attempt for email: {}", request.getEmail());
+        log.info("Auth: Patient login attempt for identifier: {}", request.getIdentifier());
 
         Map<String, Object> loginRequest = Map.of(
-                "email", request.getEmail(),
+                "identifier", request.getIdentifier(),
                 "password", request.getPassword()
         );
 
-        // Patient Service validates credentials and returns patient data
         Map<String, Object> response = patientServiceClient.loginPatient(loginRequest);
 
-        // Auth Service is the ONLY place that issues JWT tokens
-        String token = jwtUtility.generateToken(
-                request.getEmail().trim().toLowerCase(), "PATIENT");
+        // Extract email from Patient Service response for JWT generation
+        Map<String, Object> patientData = (Map<String, Object>) response.get("data");
+        String email = (String) patientData.get("patientEmail");
+
+        String token = jwtUtility.generateToken(email.trim().toLowerCase(), "PATIENT");
 
         return ResponseEntity.ok(
                 AuthResponseDTO.builder()
                         .message("Patient login successful")
                         .token(token)
                         .role("PATIENT")
-                        .data(response.get("data"))
+                        .data(patientData)
                         .build()
         );
     }
