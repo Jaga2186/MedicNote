@@ -25,4 +25,10 @@ public interface DoctorServiceClient {
 
     @GetMapping("/api/doctors/check-email/{email}")
     Map<String, Object> checkDoctorEmail(@PathVariable("email") String email);
+
+    @GetMapping("/api/doctors/by-email/{email}")
+    Map<String, Object> getDoctorByEmail(@PathVariable("email") String email);
+
+    @GetMapping("/api/doctors/by-phone/{phone}")
+    Map<String, Object> getDoctorByPhone(@PathVariable("phone") String phone);
 }

@@ -35,13 +35,23 @@ public class PatientServiceClientFallback implements FallbackFactory<PatientServ
             public Map<String, Object> loginPatient(Map<String, Object> request) {
                 throw buildException("Patient Service", cause);
             }
+
+            @Override
+            public Map<String, Object> getPatientByEmail(String email) {
+                throw buildException("Patient Service", cause);
+            }
+
+            @Override
+            public Map<String, Object> getPatientByPhone(String phone) {
+                throw buildException("Patient Service", cause);
+            }
         };
     }
 
     private RuntimeException buildException(String serviceName, Throwable cause) {
         Throwable realCause = unwrap(cause);
 
-        // ✅ Already a DownstreamServiceException from FeignErrorDecoder
+        // Already a DownstreamServiceException from FeignErrorDecoder
         if (realCause instanceof DownstreamServiceException dse) {
             log.error("[{}] DownstreamServiceException — status: {}, message: {}",
                     serviceName, dse.getStatusCode(), dse.getMessage());

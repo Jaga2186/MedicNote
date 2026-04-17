@@ -40,6 +40,16 @@ public class DoctorServiceClientFallback implements FallbackFactory<DoctorServic
             public Map<String, Object> checkDoctorEmail(String email) {
                 throw buildException("Doctor Service", cause);
             }
+
+            @Override
+            public Map<String, Object> getDoctorByEmail(String email) {
+                throw buildException("Doctor Service", cause);
+            }
+
+            @Override
+            public Map<String, Object> getDoctorByPhone(String phone) {
+                throw buildException("Doctor Service", cause);
+            }
         };
     }
 
