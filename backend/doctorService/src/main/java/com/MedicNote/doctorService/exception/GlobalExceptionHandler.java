@@ -18,6 +18,7 @@ import java.util.UUID;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    // ================= COMMON BUILDER =================
     private ErrorResponse buildError(
             HttpStatus status,
             String message,
@@ -32,7 +33,7 @@ public class GlobalExceptionHandler {
                 .message(message)
                 .path(request.getRequestURI())
                 .method(request.getMethod())
-                .traceId(UUID.randomUUID().toString().substring(0,12))
+                .traceId(UUID.randomUUID().toString())
                 .validationErrors(validationErrors)
                 .build();
     }
@@ -44,10 +45,9 @@ public class GlobalExceptionHandler {
 
         log.warn("Doctor not found: {}", ex.getMessage());
 
-        return new ResponseEntity<>(
-                buildError(HttpStatus.NOT_FOUND, ex.getMessage(),
-                        ErrorCode.DOCTOR_NOT_FOUND, request, null),
-                HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(buildError(HttpStatus.NOT_FOUND, ex.getMessage(),
+                        ErrorCode.DOCTOR_NOT_FOUND, request, null));
     }
 
     // ================= DOCTOR EXISTS =================
@@ -57,10 +57,9 @@ public class GlobalExceptionHandler {
 
         log.warn("Doctor already exists: {}", ex.getMessage());
 
-        return new ResponseEntity<>(
-                buildError(HttpStatus.CONFLICT, ex.getMessage(),
-                        ErrorCode.DOCTOR_ALREADY_EXISTS, request, null),
-                HttpStatus.CONFLICT);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildError(HttpStatus.CONFLICT, ex.getMessage(),
+                        ErrorCode.DOCTOR_ALREADY_EXISTS, request, null));
     }
 
     // ================= INVALID CREDENTIALS =================
@@ -70,10 +69,9 @@ public class GlobalExceptionHandler {
 
         log.warn("Invalid credentials: {}", ex.getMessage());
 
-        return new ResponseEntity<>(
-                buildError(HttpStatus.UNAUTHORIZED, ex.getMessage(),
-                        ErrorCode.INVALID_CREDENTIALS, request, null),
-                HttpStatus.UNAUTHORIZED);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildError(HttpStatus.UNAUTHORIZED, ex.getMessage(),
+                        ErrorCode.INVALID_CREDENTIALS, request, null));
     }
 
     // ================= BAD REQUEST =================
@@ -83,10 +81,9 @@ public class GlobalExceptionHandler {
 
         log.warn("Bad request: {}", ex.getMessage());
 
-        return new ResponseEntity<>(
-                buildError(HttpStatus.BAD_REQUEST, ex.getMessage(),
-                        ErrorCode.BAD_REQUEST, request, null),
-                HttpStatus.BAD_REQUEST);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildError(HttpStatus.BAD_REQUEST, ex.getMessage(),
+                        ErrorCode.BAD_REQUEST, request, null));
     }
 
     // ================= VALIDATION =================
@@ -95,13 +92,23 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors()
-                .forEach(e -> errors.put(e.getField(), e.getDefaultMessage()));
 
-        return new ResponseEntity<>(
-                buildError(HttpStatus.BAD_REQUEST, "Validation failed",
-                        ErrorCode.VALIDATION_FAILED, request, errors),
-                HttpStatus.BAD_REQUEST);
+        ex.getBindingResult().getFieldErrors()
+                .forEach(error -> errors.put(
+                        error.getField(),
+                        error.getDefaultMessage() != null
+                                ? error.getDefaultMessage()
+                                : "Invalid value"
+                ));
+
+        log.warn("Validation failed: {}", errors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildError(HttpStatus.BAD_REQUEST,
+                        "Validation failed",
+                        ErrorCode.VALIDATION_FAILED,
+                        request,
+                        errors));
     }
 
     // ================= GLOBAL =================
@@ -109,12 +116,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGlobal(
             Exception ex, HttpServletRequest request) {
 
-        log.error("Unexpected error", ex);
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
 
-        return new ResponseEntity<>(
-                buildError(HttpStatus.INTERNAL_SERVER_ERROR,
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(buildError(HttpStatus.INTERNAL_SERVER_ERROR,
                         "Unexpected error occurred",
-                        ErrorCode.INTERNAL_SERVER_ERROR, request, null),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                        ErrorCode.INTERNAL_SERVER_ERROR,
+                        request,
+                        null));
     }
 }
