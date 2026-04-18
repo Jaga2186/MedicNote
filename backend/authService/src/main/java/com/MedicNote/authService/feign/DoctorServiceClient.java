@@ -23,9 +23,6 @@ public interface DoctorServiceClient {
     @PostMapping("/api/doctors/login")
     Map<String, Object> loginDoctor(@RequestBody Map<String, Object> request);
 
-    @GetMapping("/api/doctors/check-email/{email}")
-    Map<String, Object> checkDoctorEmail(@PathVariable("email") String email);
-
     @GetMapping("/api/doctors/by-email/{email}")
     Map<String, Object> getDoctorByEmail(@PathVariable("email") String email);
 

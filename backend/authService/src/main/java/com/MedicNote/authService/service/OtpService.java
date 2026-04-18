@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -34,100 +35,100 @@ public class OtpService {
     @Value("${otp.expiry-minutes:5}")
     private int otpExpiryMinutes;
 
+    @Value("${otp.session-expiry-minutes:10}")
+    private int sessionExpiryMinutes;
+
     private final SecureRandom secureRandom = new SecureRandom();
 
     // =========================================================
-    // SEND OTP
+    // Called from AuthController after password is validated
     // =========================================================
     @Transactional
-    public String sendOtp(String identifier, String role) {
+    public String createSessionAndSendOtp(String email, String role) {
 
-        log.info("OTP send request — identifier: {}, role: {}", identifier, role);
-
-        // Step 1: Validate role
-        validateRole(role);
-
-        // Step 2: Fetch user email via Feign based on role and identifier
-        String email = resolveEmail(identifier, role);
-        log.info("Resolved email for OTP: {} (identifier: {})", email, identifier);
-
-        // Step 3: Generate 6-digit OTP
         String otpCode = generateOtp();
-        log.info("Generated OTP for email: {} (not logging OTP value in prod)", email);
+        String sessionToken = UUID.randomUUID().toString();
 
-        // Step 4: Invalidate any previous unused OTPs for this email
-        // (we just let them expire — new one overwrites by checking latest)
-
-        // Step 5: Save OTP record
         OtpRecord record = OtpRecord.builder()
-                .email(email)
-                .identifier(identifier.trim())
+                .sessionToken(sessionToken)
+                .email(email.trim().toLowerCase())
                 .role(role.toUpperCase())
                 .otpCode(otpCode)
                 .isUsed(false)
-                .createdAt(LocalDateTime.now())
                 .expiresAt(LocalDateTime.now().plusMinutes(otpExpiryMinutes))
+                .sessionExpiresAt(LocalDateTime.now().plusMinutes(sessionExpiryMinutes))
                 .build();
 
         otpRepository.save(record);
-        log.info("OTP record saved for email: {}", email);
+        log.info("OTP session created for email: {}, role: {}", email, role);
 
-        // Step 6: Send email
         emailService.sendOtpEmail(email, otpCode, role);
 
-        return email; // return masked email to show on frontend
+        return sessionToken;
     }
 
     // =========================================================
-    // VERIFY OTP + ISSUE JWT
+    // VERIFY OTP — issues JWT
     // =========================================================
     @Transactional
-    public AuthResponseDTO verifyOtp(String identifier, String role, String otpCode) {
+    public AuthResponseDTO verifyOtp(String sessionToken, String otpCode) {
 
-        log.info("OTP verify request — identifier: {}, role: {}", identifier, role);
+        log.info("Verifying OTP for session: {}", sessionToken);
 
-        validateRole(role);
+        // Find session
+        OtpRecord record = otpRepository.findBySessionToken(sessionToken)
+                .orElseThrow(() -> new DownstreamServiceException(401,
+                        "Invalid or expired session. Please login again.", null));
 
-        // Step 1: Resolve email from identifier
-        String email = resolveEmail(identifier, role);
-
-        // Step 2: Find latest valid OTP for this email
-        OtpRecord record = otpRepository
-                .findTopByEmailAndIsUsedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
-                        email, LocalDateTime.now())
-                .orElseThrow(() -> {
-                    log.warn("No valid OTP found for email: {}", email);
-                    return new DownstreamServiceException(401, "OTP expired or not found. Please request a new one.", null);
-                });
-
-        // Step 3: Validate OTP code
-        if (!record.getOtpCode().equals(otpCode)) {
-            log.warn("Invalid OTP attempt for email: {}", email);
-            throw new DownstreamServiceException(401, "Invalid OTP. Please try again.", null);
+        // Check session expiry
+        if (LocalDateTime.now().isAfter(record.getSessionExpiresAt())) {
+            throw new DownstreamServiceException(401,
+                    "Session expired. Please login again.", null);
         }
 
-        // Step 4: Mark OTP as used
+        // Check already used
+        if (record.getIsUsed()) {
+            throw new DownstreamServiceException(401,
+                    "OTP already used. Please login again.", null);
+        }
+
+        // Check OTP expiry
+        if (LocalDateTime.now().isAfter(record.getExpiresAt())) {
+            throw new DownstreamServiceException(401,
+                    "OTP has expired. Please login again.", null);
+        }
+
+        // Validate OTP code
+        if (!record.getOtpCode().equals(otpCode)) {
+            log.warn("Invalid OTP attempt for email: {}", record.getEmail());
+            throw new DownstreamServiceException(401,
+                    "Invalid OTP. Please try again.", null);
+        }
+
+        // Mark as used
         record.setIsUsed(true);
         otpRepository.save(record);
-        log.info("OTP verified and marked as used for email: {}", email);
+        log.info("OTP verified — email: {}, role: {}", record.getEmail(), record.getRole());
 
-        // Step 5: Fetch user data from downstream service
-        Map<String, Object> userData = fetchUserData(identifier, role);
+        // Fetch user data from downstream service
+        Map<String, Object> userData = fetchUserData(record.getEmail(), record.getRole());
 
-        // Step 6: Generate JWT
-        String token = jwtUtility.generateToken(email.trim().toLowerCase(), role.toUpperCase());
-        log.info("JWT issued for email: {}, role: {}", email, role);
+        // Issue JWT
+        String token = jwtUtility.generateToken(record.getEmail(), record.getRole());
+        log.info("JWT issued — email: {}, role: {}", record.getEmail(), record.getRole());
 
         return AuthResponseDTO.builder()
-                .message("OTP login successful")
+                .message(record.getRole().equals("DOCTOR")
+                        ? "Doctor login successful"
+                        : "Patient login successful")
                 .token(token)
-                .role(role.toUpperCase())
+                .role(record.getRole())
                 .data(userData.get("data"))
                 .build();
     }
 
     // =========================================================
-    // SCHEDULED CLEANUP — runs every hour
+    // SCHEDULED CLEANUP — every hour
     // =========================================================
     @Scheduled(fixedRate = 3600000)
     @Transactional
@@ -138,57 +139,24 @@ public class OtpService {
     }
 
     // =========================================================
-    // PRIVATE HELPERS
+    // HELPERS
     // =========================================================
 
-    private String resolveEmail(String identifier, String role) {
-        boolean isEmail = identifier.contains("@");
-
-        try {
-            if (role.equalsIgnoreCase("DOCTOR")) {
-                Map<String, Object> response = isEmail
-                        ? doctorServiceClient.getDoctorByEmail(identifier.trim().toLowerCase())
-                        : doctorServiceClient.getDoctorByPhone(identifier.trim());
-
-                Map<String, Object> data = (Map<String, Object>) response.get("data");
-                return (String) data.get("doctorEmail");
-
-            } else {
-                Map<String, Object> response = isEmail
-                        ? patientServiceClient.getPatientByEmail(identifier.trim().toLowerCase())
-                        : patientServiceClient.getPatientByPhone(identifier.trim());
-
-                Map<String, Object> data = (Map<String, Object>) response.get("data");
-                return (String) data.get("patientEmail");
-            }
-        } catch (DownstreamServiceException e) {
-            log.error("User not found for identifier: {}, role: {}", identifier, role);
-            throw new DownstreamServiceException(404,
-                    "No account found for the provided " + (identifier.contains("@") ? "email" : "phone") + ".", e);
-        }
-    }
-
-    private Map<String, Object> fetchUserData(String identifier, String role) {
-        boolean isEmail = identifier.contains("@");
+    private Map<String, Object> fetchUserData(String email, String role) {
         if (role.equalsIgnoreCase("DOCTOR")) {
-            return isEmail
-                    ? doctorServiceClient.getDoctorByEmail(identifier.trim().toLowerCase())
-                    : doctorServiceClient.getDoctorByPhone(identifier.trim());
+            return doctorServiceClient.getDoctorByEmail(email);
         } else {
-            return isEmail
-                    ? patientServiceClient.getPatientByEmail(identifier.trim().toLowerCase())
-                    : patientServiceClient.getPatientByPhone(identifier.trim());
+            return patientServiceClient.getPatientByEmail(email);
         }
     }
 
-    private void validateRole(String role) {
-        if (!role.equalsIgnoreCase("DOCTOR") && !role.equalsIgnoreCase("PATIENT")) {
-            throw new DownstreamServiceException(400, "Invalid role. Must be DOCTOR or PATIENT.", null);
-        }
+    public String maskEmail(String email) {
+        int at = email.indexOf('@');
+        if (at <= 2) return email;
+        return email.charAt(0) + "***" + email.charAt(at - 1) + email.substring(at);
     }
 
     private String generateOtp() {
-        int otp = 100000 + secureRandom.nextInt(900000);
-        return String.valueOf(otp);
+        return String.valueOf(100000 + secureRandom.nextInt(900000));
     }
 }

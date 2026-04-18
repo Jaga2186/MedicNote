@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/api/auth/doctor/login",
                                 "/api/auth/patient/register",
                                 "/api/auth/patient/login",
+                                "/api/auth/otp/verify",
                                 "/api/auth/validate",
 
                                 "/api/auth/otp/send",

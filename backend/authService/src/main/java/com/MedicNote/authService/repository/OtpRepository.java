@@ -13,13 +13,10 @@ import java.util.Optional;
 @Repository
 public interface OtpRepository extends JpaRepository<OtpRecord, Long> {
 
-    // Get latest valid (unused, not expired) OTP for an email
-    Optional<OtpRecord> findTopByEmailAndIsUsedFalseAndExpiresAtAfterOrderByCreatedAtDesc(
-            String email, LocalDateTime now);
+    Optional<OtpRecord> findBySessionToken(String sessionToken);
 
-    // Cleanup expired OTPs — scheduled job will call this
     @Modifying
     @Transactional
-    @Query("DELETE FROM OtpRecord o WHERE o.expiresAt < :now OR o.isUsed = true")
+    @Query("DELETE FROM OtpRecord o WHERE o.sessionExpiresAt < :now OR o.isUsed = true")
     void deleteExpiredAndUsedOtps(LocalDateTime now);
 }

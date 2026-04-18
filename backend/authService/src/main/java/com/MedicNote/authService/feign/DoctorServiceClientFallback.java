@@ -37,11 +37,6 @@ public class DoctorServiceClientFallback implements FallbackFactory<DoctorServic
             }
 
             @Override
-            public Map<String, Object> checkDoctorEmail(String email) {
-                throw buildException("Doctor Service", cause);
-            }
-
-            @Override
             public Map<String, Object> getDoctorByEmail(String email) {
                 throw buildException("Doctor Service", cause);
             }

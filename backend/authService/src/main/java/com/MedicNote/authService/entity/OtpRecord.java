@@ -1,10 +1,8 @@
 package com.MedicNote.authService.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "otp_records", indexes = {
+        @Index(name = "idx_otp_session", columnList = "session_token"),
         @Index(name = "idx_otp_email", columnList = "email"),
         @Index(name = "idx_otp_expires_at", columnList = "expires_at")
 })
@@ -23,15 +22,12 @@ public class OtpRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // The email we will send OTP to
+    @Column(name = "session_token", nullable = false, unique = true, length = 64)
+    private String sessionToken;
+
     @Column(name = "email", nullable = false, length = 100)
     private String email;
 
-    // Original identifier used (email or phone) — to look up user later
-    @Column(name = "identifier", nullable = false, length = 100)
-    private String identifier;
-
-    // DOCTOR or PATIENT
     @Column(name = "role", nullable = false, length = 20)
     private String role;
 
@@ -41,9 +37,13 @@ public class OtpRecord {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    @Column(name = "session_expires_at", nullable = false)
+    private LocalDateTime sessionExpiresAt;
+
     @Column(name = "is_used", nullable = false)
     private Boolean isUsed = false;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

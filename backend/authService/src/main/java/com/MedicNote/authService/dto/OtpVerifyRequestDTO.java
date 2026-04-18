@@ -6,16 +6,12 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-@Schema(description = "Request to verify OTP and login")
+@Schema(description = "Step 2 — Verify OTP and get JWT")
 public class OtpVerifyRequestDTO {
 
-    @Schema(description = "Email or phone number used when requesting OTP", example = "john.smith@hospital.com or 9876543210")
-    @NotBlank(message = "Email or phone is required")
-    private String identifier;
-
-    @Schema(description = "Role: DOCTOR or PATIENT", example = "DOCTOR")
-    @NotBlank(message = "Role is required")
-    private String role;
+    @Schema(description = "Session token received from login step", example = "a1b2c3d4-...")
+    @NotBlank(message = "Session token is required")
+    private String sessionToken;
 
     @Schema(description = "6-digit OTP code", example = "483921")
     @NotBlank(message = "OTP is required")

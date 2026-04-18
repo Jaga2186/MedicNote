@@ -3,10 +3,12 @@ package com.MedicNote.authService.controller;
 import com.MedicNote.authService.dto.AuthResponseDTO;
 import com.MedicNote.authService.dto.DoctorRegisterRequestDTO;
 import com.MedicNote.authService.dto.LoginRequestDTO;
+import com.MedicNote.authService.dto.OtpVerifyRequestDTO;
 import com.MedicNote.authService.dto.PatientRegisterRequestDTO;
 import com.MedicNote.authService.feign.DoctorServiceClient;
 import com.MedicNote.authService.feign.PatientServiceClient;
 import com.MedicNote.authService.security.JwtUtility;
+import com.MedicNote.authService.service.OtpService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +35,7 @@ public class AuthController {
     private final DoctorServiceClient doctorServiceClient;
     private final PatientServiceClient patientServiceClient;
     private final JwtUtility jwtUtility;
+    private final OtpService otpService;
 
     // ============ DOCTOR REGISTER ============
     @Operation(summary = "Register a new doctor")
@@ -43,8 +46,8 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // ============ DOCTOR LOGIN ============
-    @Operation(summary = "Doctor login — validates via Doctor Service, issues JWT here")
+    // ============ DOCTOR LOGIN — Step 1 ============
+    @Operation(summary = "Doctor login — validates credentials, sends OTP to registered email")
     @PostMapping("/doctor/login")
     public ResponseEntity<?> loginDoctor(@Valid @RequestBody LoginRequestDTO request) {
         log.info("Auth: Doctor login attempt for identifier: {}", request.getIdentifier());
@@ -54,24 +57,20 @@ public class AuthController {
                 "password", request.getPassword()
         );
 
+        // Step 1: Validate credentials via Doctor Service
         Map<String, Object> response = doctorServiceClient.loginDoctor(loginRequest);
-
-        // Extract email from Doctor Service response for JWT generation
         Map<String, Object> doctorData = (Map<String, Object>) response.get("data");
         String email = (String) doctorData.get("doctorEmail");
 
-        String token = jwtUtility.generateToken(email.trim().toLowerCase(), "DOCTOR");
+        // Step 2: Generate session + send OTP to email
+        String sessionToken = otpService.createSessionAndSendOtp(email, "DOCTOR");
+        log.info("OTP sent to doctor email: {}", email);
 
-        return ResponseEntity.ok(
-                AuthResponseDTO.builder()
-                        .message("Doctor login successful")
-                        .token(token)
-                        .role("DOCTOR")
-                        .data(doctorData)
-                        .build()
-        );
+        return ResponseEntity.ok(Map.of(
+                "message", "OTP sent to your registered email " + otpService.maskEmail(email),
+                "sessionToken", sessionToken
+        ));
     }
-
 
     // ============ PATIENT REGISTER ============
     @Operation(summary = "Register a new patient")
@@ -82,8 +81,8 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // ============ PATIENT LOGIN ============
-    @Operation(summary = "Patient login — validates via Patient Service, issues JWT here")
+    // ============ PATIENT LOGIN — Step 1 ============
+    @Operation(summary = "Patient login — validates credentials, sends OTP to registered email")
     @PostMapping("/patient/login")
     public ResponseEntity<?> loginPatient(@Valid @RequestBody LoginRequestDTO request) {
         log.info("Auth: Patient login attempt for identifier: {}", request.getIdentifier());
@@ -93,22 +92,29 @@ public class AuthController {
                 "password", request.getPassword()
         );
 
+        // Step 1: Validate credentials via Patient Service
         Map<String, Object> response = patientServiceClient.loginPatient(loginRequest);
-
-        // Extract email from Patient Service response for JWT generation
         Map<String, Object> patientData = (Map<String, Object>) response.get("data");
         String email = (String) patientData.get("patientEmail");
 
-        String token = jwtUtility.generateToken(email.trim().toLowerCase(), "PATIENT");
+        // Step 2: Generate session + send OTP to email
+        String sessionToken = otpService.createSessionAndSendOtp(email, "PATIENT");
+        log.info("OTP sent to patient email: {}", email);
 
-        return ResponseEntity.ok(
-                AuthResponseDTO.builder()
-                        .message("Patient login successful")
-                        .token(token)
-                        .role("PATIENT")
-                        .data(patientData)
-                        .build()
-        );
+        return ResponseEntity.ok(Map.of(
+                "message", "OTP sent to your registered email " + otpService.maskEmail(email),
+                "sessionToken", sessionToken
+        ));
+    }
+
+    // ============ VERIFY OTP — Step 2 ============
+    @Operation(summary = "Verify OTP and get JWT token")
+    @PostMapping("/otp/verify")
+    public ResponseEntity<AuthResponseDTO> verifyOtp(@Valid @RequestBody OtpVerifyRequestDTO request) {
+        log.info("Auth: OTP verification attempt");
+        AuthResponseDTO authResponse = otpService.verifyOtp(
+                request.getSessionToken(), request.getOtpCode());
+        return ResponseEntity.ok(authResponse);
     }
 
     // ============ VALIDATE TOKEN ============
