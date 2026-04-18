@@ -26,8 +26,6 @@ public interface DoctorService {
 
     void deleteDoctorById(Long doctorId);
 
-    Boolean checkByDoctorEmail(String email);
-
     DoctorResponseDTO getDoctorByEmail(String email);
 
     DoctorResponseDTO getDoctorByPhone(String phone);

@@ -32,10 +32,6 @@ public class DoctorServiceImplementation implements DoctorService {
     private final PasswordEncoder passwordEncoder;
 
 
-    public DoctorRepository getDoctorRepository() {
-        return doctorRepository;
-    }
-
     // =========================================================
     // REGISTER DOCTOR
     // =========================================================
@@ -217,14 +213,6 @@ public class DoctorServiceImplementation implements DoctorService {
         doctorRepository.save(doctor);
 
         log.info("Doctor deleted ID={}", doctorId);
-    }
-
-    // =========================================================
-    // CHECK EMAIL EXISTS
-    // =========================================================
-    @Override
-    public Boolean checkByDoctorEmail(String email) {
-        return doctorRepository.existsByDoctorEmail(normalizeEmail(email));
     }
 
     // =========================================================

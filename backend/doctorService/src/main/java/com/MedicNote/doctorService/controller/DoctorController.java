@@ -37,7 +37,7 @@ import java.util.Map;
 public class DoctorController {
 
     private final DoctorService doctorService;
-    // ✅ No JwtUtility here — token generation is Auth Service's responsibility
+    // No JwtUtility here — token generation is Auth Service's responsibility
 
     @Operation(summary = "Register a new doctor")
     @PostMapping("/register")
@@ -126,15 +126,6 @@ public class DoctorController {
         return ResponseEntity.ok(
                 Map.of("message", "Doctor deleted successfully", "doctorId", doctorId));
     }
-
-    @Operation(summary = "Check email existence")
-    @GetMapping("/check-email/{email}")
-    public ResponseEntity<?> checkDoctorByEmail(
-            @PathVariable @NotBlank(message = "Email is required") String email) {
-        log.info("Checking doctor by email: {}", email);
-        return ResponseEntity.ok(Map.of("exists", doctorService.checkByDoctorEmail(email)));
-    }
-
 
     @Operation(summary = "Get doctor by email")
     @GetMapping("/by-email/{email}")
