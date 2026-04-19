@@ -3,6 +3,7 @@ import api from './axios';
 // Auth
 export const loginDoctor = (data) => api.post('/auth/doctor/login', data);
 export const loginPatient = (data) => api.post('/auth/patient/login', data);
+export const verifyOtp = (data) => api.post('/auth/otp/verify', data);
 export const registerDoctor = (data) => api.post('/auth/doctor/register', data);
 export const registerPatient = (data) => api.post('/auth/patient/register', data);
 export const validateToken = () => api.get('/auth/validate');
@@ -13,6 +14,8 @@ export const getDoctorsPaginated = (page = 0, size = 10, sortBy = 'doctorId', di
   api.get(`/doctors/page?page=${page}&size=${size}&sortBy=${sortBy}&direction=${direction}`);
 export const getDoctorById = (id) => api.get(`/doctors/${id}`);
 export const getDoctorsBySpecialization = (spec) => api.get(`/doctors/specialization/${spec}`);
+export const getDoctorByEmail = (email) => api.get(`/doctors/by-email/${email}`);
+export const getDoctorByPhone = (phone) => api.get(`/doctors/by-phone/${phone}`);
 export const updateDoctor = (id, data) => api.put(`/doctors/${id}`, data);
 export const deleteDoctor = (id) => api.delete(`/doctors/${id}`);
 
@@ -21,6 +24,8 @@ export const getPatients = () => api.get('/patients');
 export const getPatientsPaginated = (page = 0, size = 10, sortBy = 'patientId', direction = 'asc') =>
   api.get(`/patients/page?page=${page}&size=${size}&sortBy=${sortBy}&direction=${direction}`);
 export const getPatientById = (id) => api.get(`/patients/${id}`);
+export const getPatientByEmail = (email) => api.get(`/patients/by-email/${email}`);
+export const getPatientByPhone = (phone) => api.get(`/patients/by-phone/${phone}`);
 export const updatePatient = (id, data) => api.put(`/patients/${id}`, data);
 export const deletePatient = (id) => api.delete(`/patients/${id}`);
 

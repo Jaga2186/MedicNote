@@ -37,6 +37,7 @@ public class SecurityConfig {
                                 "/api/auth/doctor/login",
                                 "/api/auth/patient/register",
                                 "/api/auth/patient/login",
+                                "/api/auth/otp/verify",
                                 "/actuator/**"
                         ).permitAll()
                         .anyExchange().authenticated()
